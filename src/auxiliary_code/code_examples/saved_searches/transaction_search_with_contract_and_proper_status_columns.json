@@ -1,0 +1,10 @@
+[
+  {"name":"trandate","label":"Date","type":"date","sortdir":"NONE"},
+  {"name":"enddate","label":"End Date","type":"date","sortdir":"ASC"},
+  {"name":"item","label":"Item","type":"select","sortdir":"NONE"},
+  {"name":"tranid","label":"Document Number","type":"text","sortdir":"NONE"},
+  {"name":"entity","label":"Name","type":"select","sortdir":"NONE"},
+  {"name":"memo","label":"Memo","type":"text","sortdir":"NONE"},
+  {"name":"amount","label":"Amount","type":"currency","sortdir":"NONE"},
+  {"name":"custbody_contract_name","label":"Contract","type":"select","sortdir":"NONE"}
+]

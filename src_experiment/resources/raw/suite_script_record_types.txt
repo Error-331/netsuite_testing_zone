@@ -1,0 +1,3347 @@
+Account
+
+account
+
+List
+
+Full
+
+—
+
+X
+
+Accounting Book
+
+accountingbook
+
+List
+
+Copy Not Supported
+
+—
+
+X
+
+Accounting Context
+
+accountingcontext
+
+List
+
+Read, Create, Update, Copy, Delete, and Search
+
+X
+
+X
+
+Accounting Period
+
+accountingperiod
+
+List
+
+Read and Search Only
+
+X
+
+X
+
+Activity
+
+activity
+
+Activity
+
+Search Only
+
+X
+
+X
+
+Address
+
+addressbookaddress
+
+Subrecord
+
+See Using SuiteScript with Address Subrecords.
+
+X
+
+Server scripts must access through the parent record.
+
+Advanced Intercompany Journal Entry
+
+advintercompanyjournalentry
+
+Transaction
+
+Full
+
+X
+
+X
+
+Allocation Schedule
+
+allocationschedule
+
+List
+
+Create, Read, Update, and Delete
+
+X
+
+X
+
+Amortization Schedule
+
+amortizationschedule
+
+List
+
+Copy, Create, and Delete Not Allowed
+
+—
+
+X
+
+Amortization Template
+
+amortizationtemplate
+
+List
+
+Full
+
+—
+
+X
+
+Assembly Build
+
+assemblybuild
+
+Transaction
+
+Full
+
+—
+
+X
+
+Assembly Item
+
+assemblyitem
+
+Item
+
+Full
+
+—
+
+X
+
+Assembly Unbuild
+
+assemblyunbuild
+
+Transaction
+
+Full
+
+—
+
+X
+
+Automated Clearing House
+
+automatedclearinghouse
+
+List
+
+Copy and Transform Not Supported.
+
+X
+
+X
+
+Balance Transactions by Segments
+
+balancetrxbysegments
+
+Transaction
+
+Create, Read, and Search
+
+—
+
+X
+
+Billing Account
+
+billlingaccount
+
+List
+
+Full
+
+X
+
+X
+
+Billing Class
+
+billingclass
+
+List
+
+Full
+
+X
+
+Billing Rate Card
+
+billingratecard
+
+List
+
+Read, Create, Update, Delete, and Search
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Billing Schedule
+
+billingschedule
+
+List
+
+Full
+
+—
+
+X
+
+Bin
+
+bin
+
+List
+
+Full
+
+—
+
+X
+
+Bin Putaway Worksheet
+
+binworksheet
+
+Transaction
+
+Copy and Update Not Supported
+
+—
+
+Dynamic Mode Only
+
+Bin Transfer
+
+bintransfer
+
+Transaction
+
+Full
+
+—
+
+X
+
+Blanket Purchase Order
+
+blanketpurchaseorder
+
+Transaction
+
+Full
+
+X
+
+X
+
+BOM
+
+bom
+
+List
+
+Read, Create, Update, Copy, Delete, and Search
+
+X
+
+X
+
+BOM Revision
+
+bomrevision
+
+List
+
+Read, Create, Update, Copy, Delete, and Search
+
+—
+
+X
+
+Bonus
+
+bonus
+
+Entity
+
+Read, Create, Update, Copy, Delete, and Search
+
+X
+
+X
+
+Bonus Type
+
+bonustype
+
+Entity
+
+Read, Create, Update, Copy, Delete, and Search
+
+X
+
+X
+
+Budget Exchange Rate
+
+budgetexchangerate
+
+List
+
+Read, Update, and Search
+
+X
+
+X
+
+Campaign
+
+campaign
+
+Marketing
+
+Full
+
+X
+
+X
+
+Campaign Response
+
+campaignresponse
+
+Marketing
+
+Full
+
+X
+
+X
+
+Campaign Template
+
+campaigntemplate
+
+Marketing
+
+Search Not Supported
+
+—
+
+X
+
+Case
+
+supportcase
+
+Support
+
+Full
+
+X
+
+X
+
+Cash Refund
+
+cashrefund
+
+Transaction
+
+Full
+
+X
+
+X
+
+Cash Sale
+
+cashsale
+
+Transaction
+
+Full
+
+X
+
+X
+
+Change Order
+
+subscriptionchangeorder
+
+Transaction
+
+Full
+
+X
+
+X
+
+Charge
+
+charge
+
+Transaction
+
+Full
+
+—
+
+X
+
+Check
+
+check
+
+Transaction
+
+Full
+
+X
+
+X
+
+Class
+
+classification
+
+List
+
+Server SuiteScript Only
+
+—
+
+X
+
+CMS Content
+
+cmscontent
+
+Web Site
+
+Create, Update, and Search Only Attach, Transform, and Copy Not Supported
+
+—
+
+X
+
+CMS Content Type
+
+cmscontenttype
+
+Web Site
+
+Create, Update, and Search Only Attach, Transform, and Copy Not Supported
+
+—
+
+X
+
+CMS Page
+
+cmspage
+
+Web Site
+
+Create, Update, and Search Only Attach, Transform, and Copy Not Supported
+
+—
+
+X
+
+Commerce Category
+
+commercecategory
+
+Website
+
+Attach, Transform, and Copy Not Supported
+
+—
+
+X
+
+Competitor
+
+competitor
+
+Entity
+
+Full
+
+X
+
+X
+
+Consolidated Exchange Rate
+
+consolidatedexchangerate
+
+List
+
+Read, Update, and Search OnlyCreate and Delete Not Supported
+
+X
+
+X
+
+Contact
+
+contact
+
+Entity
+
+Full
+
+X
+
+X
+
+Contact Category
+
+contactcategory
+
+List
+
+Full
+
+X
+
+X
+
+Contact Role
+
+contactrole
+
+List
+
+Full
+
+X
+
+X
+
+Cost Category
+
+costcategory
+
+List
+
+Full
+
+X
+
+X
+
+Coupon Code
+
+couponcode
+
+Marketing
+
+Full
+
+X
+
+X
+
+Credit Card Charge
+
+creditcardcharge
+
+Transaction
+
+Full
+
+—
+
+X
+
+Credit Card Refund
+
+creditcardrefund
+
+Transaction
+
+Full
+
+—
+
+X
+
+Credit Memo
+
+creditmemo
+
+Transaction
+
+Full
+
+X
+
+X
+
+Currency
+
+currency
+
+List
+
+Full — with Multiple Currencies Feature Enabledead Only — without Multiple Currencies Feature
+
+—
+
+X
+
+Custom List
+
+See Custom List IDs
+
+Custom
+
+Search Only
+
+X
+
+X
+
+Custom Record
+
+See Custom Record IDs
+
+Custom
+
+Full
+
+X
+
+X
+
+Customer
+
+customer
+
+Entity
+
+Full
+
+X
+
+X
+
+Customer Category
+
+customercategory
+
+List
+
+Search Not Supported
+
+X
+
+X
+
+Customer Deposit
+
+customerdeposit
+
+Transaction
+
+Full
+
+X
+
+X
+
+Customer Message
+
+customermessage
+
+List
+
+Full
+
+X
+
+X
+
+Customer Payment
+
+customerpayment
+
+Transaction
+
+Copy and Create Not Allowed
+
+—
+
+X
+
+Customer Refund
+
+customerrefund
+
+Transaction
+
+Full
+
+—
+
+X
+
+Customer Status
+
+customerstatus
+
+Entity
+
+Full
+
+X
+
+X
+
+Customer-Subsidiary Relationship
+
+customersubsidiaryrelationship
+
+List
+
+Full
+
+X
+
+X
+
+Department
+
+department
+
+List
+
+Server SuiteScript Only
+
+—
+
+X
+
+Deposit
+
+deposit
+
+Transaction
+
+Copy Not SupportedDynamic Mode Not Supported
+
+X
+
+X
+
+Deposit Application
+
+depositapplication
+
+Transaction
+
+Create Not Allowed
+
+X
+
+X
+
+Description Item
+
+descriptionitem
+
+Item
+
+Full
+
+X
+
+X
+
+Discount Item
+
+discountitem
+
+Item
+
+Full
+
+X
+
+X
+
+Download Item
+
+downloaditem
+
+Item
+
+Full
+
+X
+
+X
+
+Driver’s License
+
+driverslicense
+
+List
+
+Full
+
+X
+
+X User event scripts are not supported.
+
+Email Template
+
+emailtemplate
+
+Marketing
+
+Search Not Supported
+
+—
+
+X
+
+Employee
+
+employee
+
+Entity
+
+Full
+
+X
+
+X
+
+Employee Change Request
+
+employeechangerequest
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Employee Change Request Type
+
+employeechangerequesttype
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Employee Expense Source Type
+
+employeeexpensesourcetype
+
+Transaction
+
+Full
+
+X
+
+X
+
+Employee Status
+
+employeestatus
+
+Entity
+
+Transform Not Supported
+
+X
+
+X
+
+Employee Type
+
+employeetype
+
+Entity
+
+Transform Not Supported
+
+X
+
+X
+
+Entity
+
+entity
+
+Entity
+
+Search Only
+
+—
+
+—
+
+Estimate
+
+estimate
+
+Transaction
+
+Full
+
+X
+
+X
+
+Event
+
+calendarevent
+
+Activity
+
+Full
+
+X
+
+X
+
+Expense Category
+
+expensecategory
+
+List
+
+Full
+
+—
+
+X
+
+Expense Report
+
+expensereport
+
+Transaction
+
+Full
+
+X
+
+X
+
+Expence Report Policy
+
+expensereportpolicy
+
+Transaction
+
+Read, create, update, copy, delete, and search.
+
+X
+
+X
+
+Fair Value Price
+
+fairvaluepricelist
+
+List
+
+Create, Delete, and Search Only Copy Not Allowed
+
+—
+
+X
+
+File
+
+file
+
+File Cabinet
+
+Search Only
+
+—
+
+X
+
+Financial Institution
+
+financialinstitution
+
+List
+
+Read, Create, Update, Delete, and Search
+
+—
+
+X
+
+Folder
+
+folder
+
+File Cabinet
+
+Full
+
+—
+
+X
+
+Format Profile
+
+formatprofile
+
+List
+
+Read, Create, Update, and Delete
+
+X
+
+X
+
+Fulfillment Request
+
+fulfillmentrequest
+
+Transaction
+
+Create and Copy Not Supported
+
+X
+
+X
+
+General Token
+
+generaltoken
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Generic Resource
+
+genericresource
+
+Entity
+
+Copy Not Supported
+
+X
+
+X
+
+Gift Certificate
+
+giftcertificate
+
+List
+
+Full
+
+X
+
+X
+
+Gift Certificate Item
+
+giftcertificateitem
+
+Item
+
+Full
+
+X
+
+X
+
+GL Audit Numbering Sequence
+
+glnumberingsequence
+
+Transaction
+
+Read, Create, Update, Copy, Search
+
+X
+
+X
+
+Global Account Mapping
+
+globalaccountmapping
+
+List
+
+Full
+
+—
+
+X
+
+Global Inventory Relationship
+
+globalinventoryrelationship
+
+List
+
+Read, Create, Edit, Delete, SearchCopy Not Supported
+
+X
+
+X
+
+Goal
+
+goal
+
+List
+
+Full
+
+X
+
+X
+
+Group
+
+entitygroup
+
+List
+
+Full
+
+—
+
+X
+
+Imported Employee Expense
+
+importedemployeeexpense
+
+Transaction
+
+Full
+
+X
+
+X
+
+Inbound Shipment
+
+inboundshipment
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Intercompany Allocation Schedule
+
+intercompallocationschedule
+
+List
+
+Create, Read, Update, and Delete
+
+X
+
+X
+
+Intercompany Journal Entry
+
+intercompanyjournalentry
+
+Transaction
+
+Full
+
+X
+
+X
+
+Intercompany Transfer Order
+
+intercompanytransferorder
+
+Transaction
+
+Full
+
+X
+
+X
+
+Inventory Adjustment
+
+inventoryadjustment
+
+Transaction
+
+Full
+
+X
+
+X
+
+Inventory Cost Revaluation
+
+inventorycostrevaluation
+
+Transaction
+
+Full
+
+X
+
+X
+
+Inventory Count
+
+inventorycount
+
+Transaction
+
+Full
+
+X
+
+X
+
+Inventory Detail
+
+inventorydetail
+
+Subrecord
+
+See Scripting the Inventory Detail Subrecord.
+
+X
+
+Server scripts must access through the parent record
+
+Inventory Item
+
+inventoryitem
+
+Item
+
+Full
+
+X
+
+X
+
+Inventory Number
+
+inventorynumber
+
+List
+
+Copy, Create, and Delete Not Supported
+
+—
+
+X
+
+Inventory Status
+
+inventorystatus
+
+List
+
+Full
+
+X
+
+X
+
+Inventory Status Change
+
+inventorystatuschange
+
+Transaction
+
+Full
+
+X
+
+X
+
+Inventory Transfer
+
+inventorytransfer
+
+Transaction
+
+Full
+
+—
+
+X
+
+Invoice
+
+invoice
+
+Transaction
+
+Full
+
+X
+
+X
+
+Issue
+
+issue
+
+Support
+
+Full
+
+X
+
+X
+
+Issue Product
+
+issueproduct
+
+Support
+
+Copy, transform and search not supported.
+
+    X
+
+X
+
+Issue Product Version
+
+productversion
+
+Support
+
+Copy, transform and search not supported.
+
+    X
+
+X
+
+Item Account Mapping
+
+itemaccountmapping
+
+List
+
+Full
+
+—
+
+X
+
+Item Collection
+
+itemcollection
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Item Collection Item Map
+
+itemcollectionmap
+
+List
+
+Update, Copy, and Transform Not Supported
+
+X
+
+X
+
+Item Demand Plan
+
+itemdemandplan
+
+Transaction
+
+Copy Not Supported, No Available Transforms
+
+X
+
+X
+
+Item Fulfillment
+
+itemfulfillment
+
+Transaction
+
+Copy and Create Not Supported
+
+X
+
+X
+
+Item Group
+
+itemgroup
+
+Item
+
+Full
+
+X
+
+X
+
+Item Location Configuration
+
+itemlocationconfiguration
+
+List
+
+Read, Create, Edit, Delete, and Search
+
+X
+
+X
+
+Item Process Family
+
+itemprocessfamily
+
+List
+
+Full
+
+X
+
+X
+
+Item Process Group
+
+itemprocessgroup
+
+List
+
+Full
+
+X
+
+X
+
+Item Receipt
+
+itemreceipt
+
+Transaction
+
+Copy and Create Not Supported
+
+X
+
+Item Revision
+
+itemrevision
+
+List
+
+Full
+
+—
+
+X
+
+Item Search
+
+item
+
+Item
+
+Search Only
+
+—
+
+—
+
+Item Supply Plan
+
+itemsupplyplan
+
+Transaction
+
+Full
+
+X
+
+X
+
+Job
+
+job
+
+Entity
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Job Requisition
+
+jobrequisition
+
+Entity
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Journal Entry
+
+journalentry
+
+Transaction
+
+Full
+
+X
+
+X
+
+Kit Item
+
+kititem
+
+Item
+
+Full
+
+—
+
+X
+
+Kudos Feature Records
+
+kudos
+
+List
+
+Full
+
+Only the inactive field can be edited.
+
+—
+
+X
+
+Landed Cost
+
+landedcost
+
+Transaction
+
+Full
+
+—
+
+X
+
+Lead
+
+lead
+
+Entity
+
+Full
+
+X
+
+X
+
+Location
+
+location
+
+List
+
+Server SuiteScript Only
+
+—
+
+X
+
+Lot Numbered Assembly Item
+
+lotnumberedassemblyitem
+
+Item
+
+Full
+
+X
+
+X
+
+Lot Numbered Inventory Item
+
+lotnumberedinventoryitem
+
+Item
+
+Full
+
+X
+
+X
+
+Manufacturing Cost Template
+
+manufacturingcosttemplate
+
+List
+
+Full
+
+—
+
+X
+
+Manufacturing Operation Task
+
+manufacturingoperationtask
+
+Transaction
+
+Copy Not Supported
+
+X
+
+X
+
+Manufacturing Planned Time
+
+mfgplannedtime
+
+Transaction
+
+Search Only
+
+X
+
+X
+
+Manufacturing Routing
+
+manufacturingrouting
+
+List
+
+Full
+
+—
+
+X
+
+Markup Item
+
+markupitem
+
+Item
+
+Full
+
+X
+
+X
+
+Memorized Transaction Definition
+
+memdoc
+
+Transaction
+
+Read, Update, Delete, and Search
+
+X
+
+X
+
+Merchandise Hierarchy Level
+
+merchandisehierarchylevel
+
+List
+
+Read, Create, Edit, Delete, and Search
+
+—
+
+X
+
+Merchandise Hierarchy Node
+
+merchandisehierarchynode
+
+List
+
+Read, Create, Edit, Delete, and Search
+
+—
+
+X
+
+Merchandise Hierarchy Version
+
+merchandisehierarchyversion
+
+List
+
+Read, Create, Edit, Delete, and Search
+
+—
+
+X
+
+Message
+
+message
+
+Communication
+
+For details, see Message.
+
+—
+
+X
+
+Multi-Book Accounting Transaction
+
+accountingtransaction
+
+Transaction
+
+Search Only
+
+X
+
+X
+
+Nexus
+
+nexus
+
+List
+
+Copy Not Supported
+
+—
+
+X
+
+Non-Inventory Part
+
+noninventoryitem
+
+Item
+
+Full
+
+X
+
+X
+
+Note
+
+note
+
+Communication
+
+Full
+
+—
+
+X
+
+Note Type
+
+notetype
+
+List
+
+Full
+
+X
+
+X
+
+Opportunity
+
+opportunity
+
+Transaction
+
+Full
+
+X
+
+X
+
+Order Reservation
+
+orderreservation
+
+Transaction
+
+Created, read, updated, deleted, copied, and searched.
+
+X
+
+X
+
+Order Schedule
+
+orderschedule
+
+Transaction
+
+See Working with Subrecords in SuiteScript.
+
+X
+
+Server scripts must access through the parent record
+
+Order Type
+
+ordertype
+
+List
+
+Full
+
+X
+
+X
+
+Organization Value
+
+organizationvlaue
+
+List
+
+Full
+
+—
+
+X
+
+Other Charge Item
+
+otherchargeitem
+
+Item
+
+Full
+
+—
+
+—
+
+Other Government-Issued ID
+
+othergovernmentissuedid
+
+List
+
+Full
+
+X
+
+X User event scripts are not supported.
+
+Other Name
+
+othername
+
+Entity
+
+Full
+
+—
+
+X
+
+Other Name Category
+
+othernamecategory
+
+List
+
+Full
+
+X
+
+X
+
+ownershiptransfer
+
+ownershiptransfer
+
+x
+
+x
+
+x
+
+x
+
+Partner
+
+partner
+
+Entity
+
+Full
+
+X
+
+X
+
+Partner Category
+
+partnercategory
+
+List
+
+Full
+
+X
+
+X
+
+Passport
+
+passport
+
+List
+
+Full
+
+X
+
+X User event scripts are not supported.
+
+Paycheck
+
+paycheck
+
+Transaction
+
+Read and Update Only
+
+X
+
+X
+
+Paycheck Journal
+
+paycheckjournal
+
+Transaction
+
+Full
+
+X
+
+X
+
+Payment Card
+
+paymentcard
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Payment Card Token
+
+paymentcardtoken
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Payment Item
+
+paymentitem
+
+Item
+
+Full
+
+X
+
+X
+
+Payment Instruments
+
+paymentcard, paymentcardtoken, generaltoken
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Payment Method
+
+paymentmethod
+
+List
+
+Full
+
+X
+
+X
+
+Payroll Batch
+
+payroll batch
+
+Transaction
+
+Full
+
+X
+
+X
+
+Payroll Batch Employee
+
+payrollbatchaddemployees
+
+Transaction
+
+Read and Update Only
+
+X
+
+X
+
+Payroll Item
+
+payrollitem
+
+List
+
+Full
+
+X
+
+X
+
+Performance Metric
+
+performancemetric
+
+List
+
+Full
+
+X
+
+X
+
+Performance Review
+
+performancereview
+
+List
+
+Copy not supported
+
+X
+
+X
+
+Performance Review Schedule
+
+performancereviewschedule
+
+List
+
+Full
+
+X
+
+X
+
+Period End Journal
+
+periodendjournal
+
+Transaction
+
+Read, Search, limited Update
+
+X
+
+X
+
+Phone Call
+
+phonecall
+
+Activity
+
+Full
+
+X
+
+X
+
+Pick Strategy
+
+pickstrategy
+
+Transaction
+
+Full
+
+X
+
+X
+
+Planned Order
+
+plannedorder
+
+Item
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Planning Item Category
+
+planningitemcategory
+
+Item
+
+Transform Not Supported
+
+X
+
+X
+
+Planning Item Group
+
+planningitemgroup
+
+Item
+
+Transform Not Supported
+
+X
+
+X
+
+Planning Rule Group
+
+planningrulegroup
+
+Item
+
+Transform Not Supported
+
+X
+
+X
+
+Price Book
+
+pricebook
+
+List
+
+Full
+
+X
+
+X
+
+Price Level
+
+pricelevel
+
+List
+
+Search Not Supported
+
+X
+
+X
+
+Price Plan
+
+priceplan
+
+List
+
+Full
+
+X
+
+X
+
+Pricing Group
+
+pricinggroup
+
+List
+
+Full
+
+X
+
+X
+
+Project
+
+job
+
+Entity
+
+Full
+
+X
+
+X
+
+Project Charge Rule
+
+chargerule
+
+List
+
+Transform Not Supported
+
+X
+
+X
+
+Project Expense Type
+
+projectexpensetype
+
+List
+
+Full
+
+—
+
+X
+
+Project Revenue Rule
+
+(laborbasedprojectrevenuerule,fixedamountprojectrevenuerule,pctcompleteprojectrevenuerule)
+
+List
+
+Copy and Transform Not Supported
+
+X
+
+X
+
+Project Status
+
+jobstatus
+
+Entity
+
+Full
+
+X
+
+X
+
+Project Task
+
+projecttask
+
+Event
+
+Full
+
+X
+
+X
+
+Project Template
+
+projecttemplate
+
+Entity
+
+Copy Not Supported
+
+X
+
+X
+
+Project Type
+
+jobtype
+
+Entity
+
+Full
+
+X
+
+X
+
+Project Work Breakdown Structure
+
+wbs
+
+List
+
+Copy and Transform not supported
+
+X
+
+X
+
+Promotion
+
+promotioncode
+
+Marketing
+
+Full
+
+X
+
+X
+
+Prospect
+
+prospect
+
+Entity
+
+Full
+
+X
+
+X
+
+Purchase Contract
+
+purchasecontract
+
+Transaction
+
+Full
+
+X
+
+X
+
+Purchase Order
+
+purchaseorder
+
+Transaction
+
+Full
+
+X
+
+X
+
+Reallocate Items
+
+reallocateItem
+
+Item
+
+Exposed for user event scripts only.This record can not be created, loaded, or deleted using scripts.
+
+—
+
+—
+
+Requisition
+
+purchaserequisition
+
+Transaction
+
+Full
+
+X
+
+X
+
+Resource Allocation
+
+resourceallocation
+
+Activities
+
+Full
+
+X
+
+X
+
+Return Authorization
+
+returnauthorization
+
+Transaction
+
+Full
+
+X
+
+X
+
+Revenue Arrangement
+
+revenuearrangement
+
+Transaction
+
+Full
+
+—
+
+X
+
+Revenue Commitment
+
+revenuecommitment
+
+Transaction
+
+Create Not Supported
+
+X
+
+X
+
+Revenue Commitment Reversal
+
+revenuecommitmentreversal
+
+Transaction
+
+Create Not Supported
+
+X
+
+X
+
+Revenue Recognition Event
+
+billingrevenueevent
+
+List
+
+Create, Red, Update, Delete, and Search
+
+X
+
+X User Event Scripts Not Supported
+
+Revenue Recognition Plan
+
+revrecplan
+
+List
+
+Copy, Create, and Delete Not Supported
+
+—
+
+User Event Scripts Not Supported
+
+Revenue Recognition Schedule
+
+revrecschedule
+
+List
+
+Copy, Create, and Delete Not Supported
+
+—
+
+X
+
+Revenue Recognition Template
+
+revrectemplate
+
+List
+
+Full
+
+—
+
+X
+
+Role
+
+role
+
+List
+
+Search Only
+
+—
+
+X
+
+Sales channel
+
+saleschannel
+
+Transaction
+
+Created, read, updated, deleted, copied, and searched.
+
+X
+
+X
+
+Sales Order
+
+salesorder
+
+Transaction
+
+Full
+
+X
+
+X
+
+Sales Role
+
+salesrole
+
+List
+
+Full
+
+X
+
+X
+
+Sales Tax Item
+
+salestaxitem
+
+List
+
+Full
+
+—
+
+X
+
+Scheduled Script Instance
+
+
+
+Customization
+
+Search Only
+
+—
+
+X
+
+Script
+
+
+
+Customization
+
+Copy, Create, and Delete Not Supported
+
+—
+
+X
+
+Script Deployment
+
+null
+
+Customization
+
+See Usage Notes
+
+—
+
+X
+
+Serialized Assembly Item
+
+serializedassemblyitem
+
+Item
+
+Full
+
+X
+
+X
+
+Serialized Inventory Item
+
+serializedinventoryitem
+
+Item
+
+Full
+
+X
+
+X
+
+Service
+
+serviceitem
+
+Item
+
+Full
+
+X
+
+X
+
+Shipping Item
+
+shipitem
+
+Item
+
+Copy and Create Not Supported
+
+—
+
+X
+
+Shopping Cart
+
+shoppingcart
+
+Website
+
+Search Only
+
+—
+
+X
+
+Solution
+
+solution
+
+Support
+
+Full
+
+X
+
+X
+
+Statistical Journal Entry
+
+statisticaljournalentry
+
+Transaction
+
+Full
+
+X
+
+X
+
+Store Pickup Fulfillment
+
+storepickupfulfillment
+
+Transaction
+
+Copy and Create Not Supported
+
+X
+
+X
+
+Subscription
+
+subscription
+
+Transaction
+
+Full
+
+X
+
+X
+
+Subscription Line
+
+subscriptionline
+
+Transaction
+
+Create and Delete Not Supported
+
+X
+
+X
+
+Subscription Plan
+
+subscriptionplan
+
+Item
+
+Full
+
+X
+
+X
+
+Subscription Term
+
+subscriptionterm
+
+Item
+
+Copy, Create, Delete, Read, Search, and Update
+
+X
+
+X
+
+Subsidiary
+
+subsidiary
+
+List
+
+Full
+
+X
+
+X
+
+Subsidiary Settings
+
+subsidiarysettings
+
+List
+
+Read, Update, and Search Search is available only through SuiteAnalytics Workbook.
+
+—
+
+X
+
+Subtotal Item
+
+subtotalitem
+
+Item
+
+Full
+
+X
+
+X
+
+Supply Chain Snapshot
+
+supplychainsnapshot
+
+List
+
+Read, Create, Edit, Delete, and Search
+
+X
+
+X
+
+Supply Chain Snapshot Simulation
+
+supplychainsnapshotsimulation
+
+Item
+
+Read, Create, Update, Delete, Search
+
+X
+
+X
+
+Supply Change Order
+
+supplychangeorder
+
+Item
+
+Create, Copy, and Transform Not Supported
+
+X
+
+X
+
+Supply Plan Definition
+
+supplyplandefinition
+
+Item
+
+Transform Not Supported
+
+X
+
+X
+
+System Note
+
+systemnote
+
+List
+
+Search Only
+
+X
+
+X
+
+Task
+
+task
+
+Activity
+
+Full
+
+X
+
+X
+
+Tax Control Account
+
+taxacct
+
+List
+
+Delete and Search Not Supported
+
+X
+
+X
+
+Tax Group
+
+taxgroup
+
+List
+
+Full
+
+—
+
+X
+
+Tax Period
+
+taxperiod
+
+List
+
+Full
+
+—
+
+X
+
+Tax Type
+
+taxtype
+
+List
+
+Full
+
+—
+
+X
+
+Term
+
+term
+
+List
+
+Search Not Supported
+
+X
+
+X
+
+Time
+
+timebill
+
+Transaction
+
+Full
+
+X
+
+X
+
+Time-Off Change
+
+timeoffchange
+
+Entity
+
+Copy and Transform Not Supported
+
+—
+
+X
+
+Time-Off Plan
+
+timeoffplan
+
+Entity
+
+Copy and Transform Not Supported
+
+—
+
+X
+
+Time-Off Request
+
+timeoffrequest
+
+Entity
+
+Copy and Transform Not Supported
+
+—
+
+X
+
+Time-Off Rule
+
+timeoffrule
+
+Entity
+
+Copy and Transform Not Supported
+
+—
+
+X User Event Triggering is not supported.
+
+Time-Off Type
+
+timeofftype
+
+Entity
+
+Copy and Transform Not Supported
+
+—
+
+X User Event Triggering not supported.
+
+Topic
+
+topic
+
+Support
+
+Full
+
+—
+
+X
+
+Transaction Search
+
+transaction
+
+Transaction
+
+Search Only
+
+X
+
+X
+
+Transfer Order
+
+transferorder
+
+Transaction
+
+Full
+
+X
+
+X
+
+Unit of Measure
+
+unitstype
+
+List
+
+Full
+
+—
+
+X
+
+Unlocked Time Period
+
+unlockedtimeperiod
+
+Transaction
+
+Read, Create, Update, Delete, Copy, and Search
+
+X
+
+X
+
+Usage
+
+usage
+
+Transaction
+
+Full
+
+—
+
+—
+
+Vendor
+
+vendor
+
+Entity
+
+Full
+
+X
+
+X
+
+Vendor Bill
+
+vendorbill
+
+Transaction
+
+Full
+
+X
+
+X
+
+Vendor Category
+
+vendorcategory
+
+List
+
+Search Not Supported
+
+X
+
+X
+
+Vendor Credit
+
+vendorcredit
+
+Transaction
+
+Full
+
+X
+
+X
+
+Vendor Payment
+
+vendorpayment
+
+Transaction
+
+Full
+
+X
+
+X
+
+Vendor Prepayment
+
+vendoreprepayment
+
+Transaction
+
+Read, Create, Update, Delete, and Search
+
+X
+
+X
+
+Vendor Prepayment Application
+
+vendoreprepaymentapplication
+
+Transaction
+
+Read, Transform, Update, Delete, and Search
+
+X
+
+X
+
+Vendor Return Authorization
+
+vendorreturnauthorization
+
+Transaction
+
+Full
+
+X
+
+X
+
+Vendor-Subsidiary Relationship
+
+vendorsubsidiaryrelationship
+
+List
+
+Full
+
+X
+
+X
+
+Wave
+
+wave
+
+Transaction
+
+Read, Search, Update, Delete
+
+X
+
+X
+
+Website Setup
+
+website
+
+Website
+
+Full
+
+—
+
+X
+
+Weekly Timesheet
+
+timesheet
+
+Transaction
+
+Full
+
+X
+
+X
+
+Work Order
+
+workorder
+
+Transaction
+
+Full
+
+X
+
+X
+
+Work Order Close
+
+workorderclose
+
+Transaction
+
+Copy and Create Not Supported.
+
+—
+
+X
+
+Work Order Completion
+
+workordercompletion
+
+Transaction
+
+Copy and Create Not Supported
+
+—
+
+X
+
+Work Order Issue
+
+workorderissue
+
+Transaction
+
+Copy and Create Not Supported
+
+—
+
+X
+
+Workplace
+
+workplace
+
+List
+
+Full
+
+X
+
+X
+
+Zone
+
+zone
+
+List
+
+Full
+
+X
+
+X
