@@ -1,0 +1,32 @@
+[
+    {
+        "name":"formulanumeric",
+        "operator":"equalto",
+        "values":["1"],
+        "formula":"CASE WHEN {priceplan.startdate}={subscription.startdate} THEN 1 ELSE 0 END ",
+        "isor":false,
+        "isnot":false,
+        "leftparens":0,
+        "rightparens":0
+    },
+    {
+        "name":"custrecord_bs_is_import",
+        "join":"subscription",
+        "operator":"is",
+        "values":["T"],
+        "isor":true,
+        "isnot":false,
+        "leftparens":1,
+        "rightparens":0
+    },
+    {
+        "name":"parentsubscriptionid",
+        "join":"subscription",
+        "operator":"isnotempty",
+        "values":[],
+        "isor":false,
+        "isnot":false,
+        "leftparens":0,
+        "rightparens":1
+    }
+]
