@@ -20,8 +20,14 @@ define([],
             return newFilters;
         }
 
+        function addColumn(columns, newColumns){
+            return addFilter(columns, newColumns);
+        }
+
         return {
             findIdxInObjectsArrayByKeyValue,
+
             addFilter,
+            addColumn,
         }
     });
