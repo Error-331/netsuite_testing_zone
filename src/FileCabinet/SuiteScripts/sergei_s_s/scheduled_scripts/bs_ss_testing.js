@@ -7,8 +7,8 @@ require([
         'N/runtime',
         'N/search',
         './../custom_modules/moment',
-        './../custom_modules/bs_cm suite_billing_settings_utils'
-        './../custom_modules/bs_cm_general_utils'
+        '../custom_modules/utilities/bs_cm suite_billing_settings_utils',
+        './../custom_modules/utilities/bs_cm_general_utils'
     ],
     /**
      * @param{http} http
@@ -21,193 +21,9 @@ require([
         { initSuiteBillingBSNEnvSettings },
         { isNullOrEmpty, logExecution }
     ) => {
-        function bsnGetEmailParamsObjectDummy() {
-            return {
-                check:  '',
-                attachInvoice: false,
-                suspend: false,
-
-                from: 0,
-                to: 0,
-
-                sendToDisty: false,
-                sendToReseller: false,
-                sendToOwner: false,
-
-                isTerms: false,
-                sendToSales: false,
-            };
-        }
-
-        function bsnGetRenewalEmailParamsForBsn(period, subtype) {
-            const paramsObject = bsnGetEmailParamsObjectDummy();
-
-            let isROW = false;
-            if(!isNullOrEmpty(countryCode) && countryCode != 'US') {
-                isROW = true;
-            }
-
-            switch (period) {
-                case '-30t':
-                case '-30p':
-                case '-30a':
-                    paramsObject.check = 'custrecord_bs_sub_30day_email';
-                    paramsObject.from = -30;
-                    paramsObject.to = -15.01;
-                    paramsObject.sendToReseller = true;
-                    paramsObject.sendToDisty = true;
-                    paramsObject.sendToOwner = isROW;
-                    break;
-                case '-15t':
-                case '-15p':
-                case '-15a':
-                    paramsObject.check = 'custrecord_bs_sub_15day_email';
-                    paramsObject.from = -15;
-                    paramsObject.to = -7.01;
-                    paramsObject.sendToDisty = isROW;
-                    paramsObject.sendToOwner = true;
-                    break;
-                case '-7t':
-                case '-7p':
-                case '-7a':
-                    paramsObject.check = 'custrecord_bs_sub_7day_email';
-                    paramsObject.from = -7;
-                    paramsObject.to = -0.01;
-                    paramsObject.sendToDisty = isROW;
-                    paramsObject.sendToOwner = true;
-                    break;
-                case '0t':
-                    paramsObject.attachInvoice = true;
-                case '0p':
-                case '0a':
-                    paramsObject.check = 'custrecord_bs_sub_0day_email';
-                    paramsObject.from = 0;
-                    paramsObject.to = 6.99;
-                    paramsObject.sendToDisty = true;
-                    paramsObject.sendToOwner = true;
-                    break;
-                case '7t':
-                    paramsObject.attachInvoice = true;
-                case '7p':
-                case '7a':
-                    paramsObject.check = 'custrecord_bs_sub_7day_past_email';
-                    paramsObject.from = 7;
-                    paramsObject.to = 29.99;
-                    paramsObject.sendToDisty = isROW;
-                    paramsObject.sendToOwner = true;
-                    break;
-                case '30t':
-                    paramsObject.attachInvoice = true;
-                //case '30p':
-                case '30a':
-                    paramsObject.check = 'custrecord_bs_sub_30day_past_email';
-                    paramsObject.from = 30;
-                    paramsObject.to = 450;
-                    paramsObject.sendToDisty = true;
-                    paramsObject.sendToOwner = true;
-                    //suspend = true; //Do Not Suspent Terms Customers
-                    break;
-                default:
-                    throw new Error(`Cannot determine renewal period (email params) for BSN: "${period}"`);
-                    break;
-            }
-
-            if( subtype == 'bsn' && period == '7p' ) {
-                paramsObject.suspend = true;
-            }
-
-            switch (period) {
-                case '-30t':
-                case '-15t':
-                case '30t':
-                    paramsObject.isTerms = true;
-                    break;
-                case '-7t':
-                case '0t':
-                case '7t':
-                    paramsObject.isTerms = true;
-                    paramsObject.sendToSales = true;
-                    break;
-                default:
-                    break;
-            }
-
-            return paramsObject;
-        }
-
-        function bsnGetRenewalEmailParamsForBsnee(period) {
-            const paramsObject = bsnGetEmailParamsObjectDummy();
-
-            paramsObject.sendToDisty = true;
-            switch (period) {
-                case '-30t':
-                    paramsObject.check = 'custrecord_bs_sub_30day_email';
-                    paramsObject.from = -30;
-                    paramsObject.to = -15.01;
-
-                    break;
-                case '-15t':
-                    paramsObject.check = 'custrecord_bs_sub_15day_email';
-                    paramsObject.from = -15;
-                    paramsObject.to = -7.01;
-
-                    break;
-                case '-7t':
-                    paramsObject.check = 'custrecord_bs_sub_7day_email';
-                    paramsObject.from = -7;
-                    paramsObject.to = -0.01;
-
-                    break;
-                case '0t':
-                    paramsObject.check = 'custrecord_bs_sub_0day_email';
-                    paramsObject.from = 0;
-                    paramsObject.to = 30;
-
-                    break;
-                default:
-                    throw new Error(`Cannot determine renewal period (email params) for BSNEE: "${period}"`);
-
-                    break;
-            }
-
-            switch (period) {
-                case '-15t':
-                case '-7t':
-                case '0t':
-                    paramsObject.isTerms = true;
-                    paramsObject.sendToSales = true;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        function bsnRenewalEmailFromTo(period, subtype){
-            if(subtype == 'bsn') {
-                return bsnGetRenewalEmailParamsForBsn(period, subtype);
-            } else if( subtype == 'bsnee' ) {
-                return bsnGetRenewalEmailParamsForBsnee(period);
-            }
-        }
-
-        // TODO: to general functions (check)
-        function addFilter(filters, newFilter){
-            return filters.split().push(newFilter);
-        }
-
-        // TODO: to general functions (check)
-        function search(nameKey, myArray, myArrayIndex){
-            for (var i=0; i < myArray.length; i++) {
-                if (myArray[i][myArrayIndex] === nameKey) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
         // TODO: to general functions (check)
         function bsnGetEmailTemplateByCode(code, type){
-            sbBSNSettings = initSuiteBillingBSNEnvSettings();
+            sbBSNSettings = initSuiteBillingBSNSettings();
 
             const res = search(code, sbBSNSettings.emailTemplates, 'code');
             return res == -1 ? 0 : parseInt(sbBSNSettings.emailTemplates[res][type]);
@@ -219,232 +35,50 @@ require([
             try {
                 settings = bsnRenewalEmailFromTo(period, subtype, '');
             } catch(error) {
-                logExecution( 'ERROR', 'Wrong data', 'Stopping.' );
+                logExecution('ERROR', 'Wrong data', 'Stopping.');
                 return;
             }
 
             const checkCC = hascc || false;
-            // TODO: to general module
-            const scriptObj = runtime.getCurrentScript();
-            logExecution('DEBUG', 'Units Left', scriptObj.getRemainingUsage());
-
+            printCurrentScriptRemainingUsage();
 
             const isTerms = settings.isTerms;
             const sendToSales = settings.sendToSales;
 
-            let i, renewalChargeUniSearch, filters, columns, newFilters, newColumns;
+            let renewalChargeUniSearch, newFilters;
 
             logExecution('DEBUG', 'settings', JSON.stringify(settings));
+            renewalChargeUniSearch = getRenewalChargeUniSearchFiltersColumns();
+            logExecution('DEBUG', 'filters length', renewalChargeUniSearch.filters.length);
 
-            renewalChargeUniSearch = search.load({
-                type: 'charge',
-                id: 'customsearch_sb_renewal_charge_uni'
-            });
-
-            filters = search.filters;
-            columns = search.columns;
-
-            logExecution('DEBUG', 'filters', filters.length);
-
-
-            let timeFilter = null;
-            if( isTerms && period === '7t' && subtype != 'bsnee' ){
-                timeFilter = search.createFilter({
-                    name: 'entity',
-                    join: null,
-                    operator: search.Operator.BETWEEN,
-                    values: [-10, 0]
-                });
-
-                timeFilter.setFormula("(FLOOR({now}-{subscription.startdate})) - (CASE WHEN regexp_like({invoice.terms}, '*Net 45') THEN  45 WHEN regexp_like({invoice.terms}, '*Net 60') THEN  60 WHEN regexp_like({invoice.terms}, '*Net 90') THEN  90 WHEN regexp_like({invoice.terms}, '*Net 120') THEN  120 WHEN regexp_like({invoice.terms}, '*Net*') THEN  30 ELSE 0 END)" );
-            } else if( isTerms && period === '30t' && subtype != 'bsnee' ){
-                timeFilter = search.createFilter({
-                    name: 'formulanumeric',
-                    join: null,
-                    operator: search.Operator.GREATERTHANOREQUALTO,
-                    values: [0]
-                });
-
-                timeFilter.setFormula( "(FLOOR({now}-{subscription.startdate})) - (CASE WHEN regexp_like({invoice.terms}, '*Net 45') THEN  45 WHEN regexp_like({invoice.terms}, '*Net 60') THEN  60 WHEN regexp_like({invoice.terms}, '*Net 90') THEN  90 WHEN regexp_like({invoice.terms}, '*Net 120') THEN  120 WHEN regexp_like({invoice.terms}, '*Net*') THEN  30 ELSE 0 END)" );
-            } else {
-                timeFilter = search.createFilter({
-                    name: 'formulanumeric',
-                    join: null,
-                    operator: search.Operator.BETWEEN,
-                    values: [settings.from, settings.to],
-                });
-
-                timeFilter.setFormula( '{now}-{subscription.startdate}' );
-            }
-            newFilters = addFilter(filters, timeFilter);
-            if( !isNullorEmpty( settings.check ) ) {
-                const subFilter = search.createFilter({
-                    name: settings.check,
-                    join: 'subscription',
-                    operator: search.Operator.IS,
-                    values: ['is', 'F'],
-                });
-
-                newFilters = addFilter(newFilters, subFilter);
-            }
-
-            if( settings.uncheck && settings.uncheck.length ){
-                for(i = 0; i < settings.uncheck.length; i++) {
-                    const subFilter = search.createFilter({
-                        name: settings.uncheck[i],
-                        join: 'subscription',
-                        operator: search.Operator.IS,
-                        values: ['is', 'F'],
-                    });
-
-                    newFilters = addFilter(newFilters, subFilter);
-                }
-            }
+            newFilters = addFilter(renewalChargeUniSearch.filters, createTimeFilter(isTerms, period, subtype, settings.from, settings.to));
+            newFilters = addCheckAndUncheckFilters(newFilters, settings.check, settings.uncheck);
 
             if(settings.to >= 0){
-                let subFilter = search.createFilter({
-                    name: 'status',
-                    join: 'subscription',
-                    operator: search.Operator.ANYOF,
-                    values: ['anyof', 'ACTIVE'],
-                });
-
-                newFilters = addFilter(newFilters, subFilter);
-
-                subFilter = search.createFilter({
-                    name: 'status',
-                    join: 'invoice',
-                    operator: search.Operator.ANYOF,
-                    values: ['CustInvc:A'],
-                });
-
-                newFilters = addFilter(newFilters, subFilter);
-                let eligibleItems = [sbBSNSettings.bsn1yrItemNum, sbBSNSettings.bsnc1yrItemNum];
-
-                if(subtype == 'bsnee') {
-                    eligibleItems = [sbBSNSettings.bsnee1yrItemNum];
-                }
-
-                subFilter = search.createFilter({
-                    name: 'status',
-                    join: 'invoice',
-                    operator: search.Operator.ANYOF,
-                    values: [eligibleItems],
-                });
-
-                newFilters = addFilter( newFilters, subFilter);
+                newFilters = addZeroOrMoreDaysFilter(newFilters, subtype);
             } else {
-                let eligibleItems = [netTypeCom, netTypeCloud];
-                if(subtype == 'bsnee') {
-                    eligibleItems = [netTypeBSNEE];
-                }
-
-                logExecution('DEBUG', 'eligibleItems', JSON.stringify(eligibleItems));
-
-                let subFilter = search.createFilter({
-                    name: 'custrecord_bsn_type',
-                    join: 'subscription',
-                    operator: search.Operator.ANYOF,
-                    values: [eligibleItems],
-                });
-
-                newFilters = addFilter(newFilters, subFilter);
-
-                subFilter = search.createFilter({
-                    name: 'status',
-                    join: 'subscription',
-                    operator: search.Operator.ANYOF,
-                    values: ['PENDING_ACTIVATION'],
-                });
-
-                newFilters = addFilter(newFilters, subFilter);
+                newFilters = addLessThenZeroDaysFilter(newFilters, subtype);
             }
 
-            if( settings.from == 0 ){
-                const internalIdInvoiceColumn = search.createColumn({
-                    name: 'internalid',
-                    join: 'invoice',
-                });
+            let newColumns;
 
-                newColumns = addFilter( columns, internalIdInvoiceColumn);
+            if( settings.from == 0 ){
+                newColumns = addZeroDaysColumn(renewalChargeUniSearch.columns);
             } else {
-                newColumns = columns;
+                newColumns = renewalChargeUniSearch.columns;
             }
 
             logExecution('DEBUG', 'filters', newFilters.length);
-            const searchSubs = [];
+            let searchSubs = [];
 
             if(isTerms) {
-                let subFilter =  search.createFilter({
-                    name: 'terms',
-                    join: 'customer',
-                    operator: search.Operator.NONEOF,
-                    values: ['@NONE@', '13'],
-                });
-
-                let filters0 = addFilter(newFilters, subFilter);
-
-                subFilter =  search.createFilter({
-                    name: 'custrecord_payop_ccid',
-                    join: 'billingaccount',
-                    operator: search.Operator.ISEMPTY,
-                });
-
-                filters0 = addFilter(filters0, subFilter);
-                logExecution('DEBUG', 'filters', filters0);
-
-                let subSearch = search.create({
-                    type: 'charge',
-                    id: null,
-                    columns: newColumns,
-                    filters: filters0,
-                });
-
-                searchSubs.push(subSearch);
+                searchSubs.push(createTermsSearch(newColumns, newFilters));
             } else {
-                let subFilters = search.createFilter({
-                    name: 'terms',
-                    join: 'customer',
-                    operator: search.Operator.ANYOF,
-                    values: ['@NONE@', '13'],
-                });
-
-                const filters1 = addFilter(newFilters, subFilters);
-                let subSearch = search.create({
-                    type: 'charge',
-                    id: null,
-                    columns: newColumns,
-                    filters: filters1,
-                });
-
-                searchSubs.push(subSearch);
-                subFilters = search.createFilter({
-                    name: 'terms',
-                    join: 'customer',
-                    operator: search.Operator.NONEOF,
-                    values: ['@NONE@', '13'],
-                });
-
-                let filters2 = addFilter(newFilters, subFilters);
-                subFilters = search.createFilter({
-                    name: 'custrecord_payop_ccid',
-                    join: 'billingaccount',
-                    operator: search.Operator.ISNOTEMPTY,
-                });
-
-                filters2 = addFilter(filters2, subFilters);
-                subSearch = search.create({
-                    type: 'charge',
-                    id: null,
-                    columns: newColumns,
-                    filters: filters2,
-                });
-
-                searchSubs.push(subSearch);
+                searchSubs = createNoneTermsSearches(newColumns, newFilters);
             }
 
             logExecution('DEBUG', 'searchSubs', JSON.stringify(searchSubs));
-            logExecution('DEBUG', 'Units Left', scriptObj.getRemainingUsage());
+            printCurrentScriptRemainingUsage();
 
             if(searchSubs.length) {
                 for(let k = 0; k < searchSubs.length; k++) {
@@ -633,9 +267,7 @@ require([
                                 }
                             }
 
-
-                            usage = nlapiGetContext().getRemainingUsage();
-                            nlapiLogExecution('DEBUG', 'Units Left', usage);
+                            printCurrentScriptRemainingUsage();
                             //}
                         }
                     }
