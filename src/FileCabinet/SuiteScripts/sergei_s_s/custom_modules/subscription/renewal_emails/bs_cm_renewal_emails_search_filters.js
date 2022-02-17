@@ -209,7 +209,6 @@ define([
             return addFilter(preparedPrevFilters, createSubscriptionFilter('status', ['PENDING_ACTIVATION']));
         }
 
-
         function addTermsFilters(prevFilters = []) {
             let preparedPrevFilters = prevFilters.slice();
             let filterInstance = createTermsFilter(search.Operator.NONEOF);
@@ -219,8 +218,6 @@ define([
             filterInstance = createPayopCCIDFilter(search.Operator.ISEMPTY);
             return addFilter(preparedPrevFilters, filterInstance);
         }
-
-
 
         return {
             create7tNoneBSNEETermsFilter,
