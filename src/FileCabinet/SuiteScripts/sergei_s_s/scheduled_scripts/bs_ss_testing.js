@@ -4,22 +4,39 @@
  */
 require([
         'N/record',
-        'N/runtime',
         'N/search',
-        './../custom_modules/moment',
-        '../custom_modules/utilities/bs_cm suite_billing_settings_utils',
-        './../custom_modules/utilities/bs_cm_general_utils'
+       // './../custom_modules/moment',
+        'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_general_utils',
+        'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_runtime_utils',
+        'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_parameters_preparation',
+        'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm suite_billing_settings_utils',
+        'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_searches',
+        'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_search_filters',
+        'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_email_search_columns'
     ],
     /**
-     * @param{http} http
+     * @param{record} record
      */
     (
         record,
-        runtime,
         search,
-        moment,
+        //moment,
+        { isNullOrEmpty, logExecution },
+        { printCurrentScriptRemainingUsage },
+        { getRenewalEmailParamsForBSN },
         { initSuiteBillingBSNEnvSettings },
-        { isNullOrEmpty, logExecution }
+        {
+            getRenewalChargeUniSearchFiltersColumns,
+            createTermsSearch,
+            createNoneTermsSearches,
+        },
+        {
+            addCheckAndUncheckFilters,
+            addZeroOrMoreDaysFilter,
+            addLessThenZeroDaysFilter,
+        },
+        { addZeroDaysColumn }
+
     ) => {
         // TODO: to general functions (check)
         function bsnGetEmailTemplateByCode(code, type){
@@ -33,7 +50,7 @@ require([
             let settings;
 
             try {
-                settings = bsnRenewalEmailFromTo(period, subtype, '');
+                settings = getRenewalEmailParamsForBSN(period, subtype, '');
             } catch(error) {
                 logExecution('ERROR', 'Wrong data', 'Stopping.');
                 return;
@@ -79,8 +96,9 @@ require([
 
             logExecution('DEBUG', 'searchSubs', JSON.stringify(searchSubs));
             printCurrentScriptRemainingUsage();
-
-            if(searchSubs.length) {
+log.debug(searchSubs);
+log.debug('end')
+            /*if(searchSubs.length) {
                 for(let k = 0; k < searchSubs.length; k++) {
                     if (searchSubs[k]) {
                         const customerTemplate = bsnGetEmailTemplateByCode(period, subtype == 'bsnee' ? 'bsnee' : 'customer');
@@ -245,7 +263,7 @@ require([
                                     nlapiLogExecution('DEBUG', 'Email not sent', 'Less than 25 Subs or not Terms. Skipping...');
                                 }
                             } else {
-                                /*TODO: Send Email to Sales if no email address on record*/
+                                // TODO: Send Email to Sales if no email address on record
                                 nlapiLogExecution('DEBUG', 'Email not sent', 'Customer "' + subValues.customerName + '" has no Email. Skipping...');
                             }
 
@@ -272,7 +290,7 @@ require([
                         }
                     }
                 }
-            }
+            }*/
         }
 
 
@@ -288,14 +306,14 @@ require([
          * @since 2015.2
          */
         const execute = (scriptContext) => {
-            const subtype = '.com or .cloud';
-            const period = null;
+            const subtype = 'bsn';
+            const period = '-30t';
 
             logExecution('DEBUG', '', '================== BSN Subscriptions creation Start =================');
             logExecution('DEBUG', 'Init data', `subtype: ${subtype}, period: ${period}"`);
 
-            const today = moment().format(); // TODO: nlapiDateToString(new Date()); - check
-            logExecution('DEBUG', 'today', today);
+          //  const today = moment().format(); // TODO: nlapiDateToString(new Date()); - check
+            //logExecution('DEBUG', 'today', today);
 
             if(!isNullOrEmpty(subtype) && !isNullOrEmpty(period) ) {
                 bsnGetMailingList(period, subtype);

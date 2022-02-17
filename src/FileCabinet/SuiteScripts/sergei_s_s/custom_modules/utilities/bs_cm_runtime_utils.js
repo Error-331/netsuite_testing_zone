@@ -3,7 +3,7 @@
  */
 define([
         'N/runtime',
-        './../custom_modules/utilities/bs_cm_general_utils'
+        './bs_cm_general_utils'
     ],
     /**
  * @param{runtime} runtime

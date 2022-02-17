@@ -20,7 +20,7 @@ require(['N/search'],
                 id: 'customsearch_sb_renewal_charge_uni'
             });
 
-            log.debug(renewalChargeUniSearch.filters);
+            log.debug(renewalChargeUniSearch);
         }
         execute();
         return {execute}
