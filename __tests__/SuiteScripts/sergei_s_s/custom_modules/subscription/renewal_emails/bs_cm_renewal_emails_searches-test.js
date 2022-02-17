@@ -2,10 +2,18 @@ import search from 'N/search';
 import Filter from 'N/search/filter';
 import Column from 'N/search/column';
 
-import { getRenewalChargeUniSearchFiltersColumns } from './../../../../../../src/FileCabinet/SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_searches';
+import {
+    getRenewalChargeUniSearchFiltersColumns,
+    createTermsSearch,
+    createNoneTermsSearches,
+} from './../../../../../../src/FileCabinet/SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_searches';
 
 import { constructorMockImplementation as filterConstructorMockImplementation } from './../../../../../../src/Utilities/tests/search/filter';
 import { constructorMockImplementation as columnConstructorMockImplementation } from './../../../../../../src/Utilities/tests/search/column';
+import {
+    createColumnMockImplementation,
+    createFilterMockImplementation,
+} from './../../../../../../src/Utilities/tests/search/search';
 
 import renewalChangeUniSearchFilters from './../../../../../../src/JSON/subscription/renewal_emails/renewal_charge_uni_search_filters.json';
 import renewalChangeUniSearchColumns from './../../../../../../src/JSON/subscription/renewal_emails/renewal_charge_uni_search_columns.json';
@@ -20,6 +28,9 @@ beforeEach(() => {
 
     Filter.constructor.mockImplementation(filterConstructorMockImplementation);
     Column.constructor.mockImplementation(columnConstructorMockImplementation);
+
+    search.createFilter.mockImplementation(createFilterMockImplementation);
+    search.createColumn.mockImplementation(createColumnMockImplementation);
 
     search.load.mockImplementation(() => {
         const filters = [];
@@ -38,10 +49,14 @@ beforeEach(() => {
             columns,
         };
     });
+
+    search.create.mockImplementation((options) => {
+        return options;
+    });
 });
 
 describe('Custom modules / subscription / renewal emails / renewal emails searches tests', () => {
-    it('it should return correct UNI search filters and columns...', () => {
+    it('it should return proper UNI search filters and columns', () => {
         const filtersColumns = getRenewalChargeUniSearchFiltersColumns();
 
         expect(filtersColumns.filters[0].name).toBe('formulanumeric');
@@ -67,4 +82,298 @@ describe('Custom modules / subscription / renewal emails / renewal emails search
 
         expect(filtersColumns.columns.length).toBe(37);
     });
+
+    it('it should return proper terms search filters and columns (case 1)', () => {
+        const testSearch = createTermsSearch();
+
+        expect(testSearch.type).toBe('charge');
+        expect(testSearch.id).toBe(null);
+
+        expect(testSearch.columns).toStrictEqual([]);
+        expect(testSearch.filters).toStrictEqual([
+            new Filter.constructor({
+                name: 'terms',
+                join: 'customer',
+                operator: search.Operator.NONEOF,
+                values: ['@NONE@', '13'],
+            }),
+
+            new Filter.constructor({
+                name: 'custrecord_payop_ccid',
+                join: 'billingaccount',
+                operator: search.Operator.ISEMPTY,
+                values: null,
+            }),
+        ]);
+    });
+
+    it('it should return proper terms search filters and columns (case 2)', () => {
+        const testFilters = [
+            search.createFilter({
+                name: 'test_filter1',
+                join: 'test_join1',
+                operator: search.Operator.ANYOF,
+                values: [10, 20],
+            }),
+
+            search.createFilter({
+                name: 'test_filter2',
+                join: 'test_join2',
+                operator: search.Operator.ANYOF,
+                values: [-10, -20],
+            }),
+        ];
+
+        const testColumns = [
+            new Column.constructor({
+                name: 'test_name1',
+                join: 'test_join1',
+                summary: 'test_summary1',
+                formula: null,
+                label: 'test_label1',
+                sort: null,
+            }),
+
+            new Column.constructor({
+                name: 'test_name2',
+                join: 'test_join2',
+                summary: 'test_summary2',
+                formula: null,
+                label: 'test_label2',
+                sort: null,
+            }),
+        ];
+
+        const testSearch = createTermsSearch(testColumns, testFilters);
+
+        expect(testSearch.type).toBe('charge');
+        expect(testSearch.id).toBe(null);
+
+        expect(testSearch.columns).toStrictEqual([
+            new Column.constructor({
+                name: 'test_name1',
+                join: 'test_join1',
+                summary: 'test_summary1',
+                formula: null,
+                label: 'test_label1',
+                sort: null,
+            }),
+
+            new Column.constructor({
+                name: 'test_name2',
+                join: 'test_join2',
+                summary: 'test_summary2',
+                formula: null,
+                label: 'test_label2',
+                sort: null,
+            }),
+        ]);
+
+        expect(testSearch.filters).toStrictEqual([
+            search.createFilter({
+                name: 'test_filter1',
+                join: 'test_join1',
+                operator: search.Operator.ANYOF,
+                values: [10, 20],
+            }),
+
+            search.createFilter({
+                name: 'test_filter2',
+                join: 'test_join2',
+                operator: search.Operator.ANYOF,
+                values: [-10, -20],
+            }),
+
+            new Filter.constructor({
+                name: 'terms',
+                join: 'customer',
+                operator: search.Operator.NONEOF,
+                values: ['@NONE@', '13'],
+            }),
+
+            new Filter.constructor({
+                name: 'custrecord_payop_ccid',
+                join: 'billingaccount',
+                operator: search.Operator.ISEMPTY,
+                values: null,
+            }),
+        ]);
+    });
+
+    it('it should return proper none-terms searches filters and columns (case 1)', () => {
+        const testSearches = createNoneTermsSearches();
+
+        expect(testSearches[0].type).toBe('charge');
+        expect(testSearches[0].id).toBe(null);
+
+        expect(testSearches[1].type).toBe('charge');
+        expect(testSearches[1].id).toBe(null);
+
+        expect(testSearches[0].columns).toStrictEqual([]);
+        expect(testSearches[1].columns).toStrictEqual([]);
+
+        expect(testSearches[0].filters).toStrictEqual([
+            new Filter.constructor({
+                name: 'terms',
+                join: 'customer',
+                operator: search.Operator.ANYOF,
+                values: ['@NONE@', '13'],
+            }),
+        ]);
+
+        expect(testSearches[1].filters).toStrictEqual([
+            new Filter.constructor({
+                name: 'terms',
+                join: 'customer',
+                operator: search.Operator.NONEOF,
+                values: ['@NONE@', '13'],
+            }),
+
+            new Filter.constructor({
+                name: 'custrecord_payop_ccid',
+                join: 'billingaccount',
+                operator: search.Operator.ISNOTEMPTY,
+                values: null,
+            }),
+        ]);
+    });
+
+    it('it should return proper none-terms searches filters and columns (case 2)', () => {
+        const testFilters = [
+            search.createFilter({
+                name: 'test_filter1',
+                join: 'test_join1',
+                operator: search.Operator.ANYOF,
+                values: [10, 20],
+            }),
+
+            search.createFilter({
+                name: 'test_filter2',
+                join: 'test_join2',
+                operator: search.Operator.ANYOF,
+                values: [-10, -20],
+            }),
+        ];
+
+        const testColumns = [
+            new Column.constructor({
+                name: 'test_name1',
+                join: 'test_join1',
+                summary: 'test_summary1',
+                formula: null,
+                label: 'test_label1',
+                sort: null,
+            }),
+
+            new Column.constructor({
+                name: 'test_name2',
+                join: 'test_join2',
+                summary: 'test_summary2',
+                formula: null,
+                label: 'test_label2',
+                sort: null,
+            }),
+        ];
+
+        const testSearches = createNoneTermsSearches(testColumns, testFilters);
+
+        expect(testSearches[0].type).toBe('charge');
+        expect(testSearches[0].id).toBe(null);
+
+        expect(testSearches[1].type).toBe('charge');
+        expect(testSearches[1].id).toBe(null);
+
+        expect(testSearches[0].columns).toStrictEqual([
+            new Column.constructor({
+                name: 'test_name1',
+                join: 'test_join1',
+                summary: 'test_summary1',
+                formula: null,
+                label: 'test_label1',
+                sort: null,
+            }),
+
+            new Column.constructor({
+                name: 'test_name2',
+                join: 'test_join2',
+                summary: 'test_summary2',
+                formula: null,
+                label: 'test_label2',
+                sort: null,
+            }),
+        ]);
+        expect(testSearches[1].columns).toStrictEqual([
+            new Column.constructor({
+                name: 'test_name1',
+                join: 'test_join1',
+                summary: 'test_summary1',
+                formula: null,
+                label: 'test_label1',
+                sort: null,
+            }),
+
+            new Column.constructor({
+                name: 'test_name2',
+                join: 'test_join2',
+                summary: 'test_summary2',
+                formula: null,
+                label: 'test_label2',
+                sort: null,
+            }),
+        ]);
+
+        expect(testSearches[0].filters).toStrictEqual([
+            search.createFilter({
+                name: 'test_filter1',
+                join: 'test_join1',
+                operator: search.Operator.ANYOF,
+                values: [10, 20],
+            }),
+
+            search.createFilter({
+                name: 'test_filter2',
+                join: 'test_join2',
+                operator: search.Operator.ANYOF,
+                values: [-10, -20],
+            }),
+
+            new Filter.constructor({
+                name: 'terms',
+                join: 'customer',
+                operator: search.Operator.ANYOF,
+                values: ['@NONE@', '13'],
+            }),
+        ]);
+
+        expect(testSearches[1].filters).toStrictEqual([
+            search.createFilter({
+                name: 'test_filter1',
+                join: 'test_join1',
+                operator: search.Operator.ANYOF,
+                values: [10, 20],
+            }),
+
+            search.createFilter({
+                name: 'test_filter2',
+                join: 'test_join2',
+                operator: search.Operator.ANYOF,
+                values: [-10, -20],
+            }),
+
+            new Filter.constructor({
+                name: 'terms',
+                join: 'customer',
+                operator: search.Operator.NONEOF,
+                values: ['@NONE@', '13'],
+            }),
+
+            new Filter.constructor({
+                name: 'custrecord_payop_ccid',
+                join: 'billingaccount',
+                operator: search.Operator.ISNOTEMPTY,
+                values: null,
+            }),
+        ]);
+    });
+
 });
