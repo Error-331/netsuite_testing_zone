@@ -6,7 +6,6 @@
         "build-development-library": "webpack --progress --config build/webpack.config.library.js",
         "test": "jest"
     },
-
     "dependencies": {
         "@brightsign/bscore": "1.3.7",
         "@brightsign/bsnconnector": "1.3.12",
