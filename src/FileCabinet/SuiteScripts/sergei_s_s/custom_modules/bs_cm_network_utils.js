@@ -1,7 +1,7 @@
 /**
  * @NApiVersion 2.1
  */
-define(['./bs_cm suite_billing_settings_utils'],
+define(['./utilities/bs_cm suite_billing_settings_utils'],
 
     ({ initSuiteBillingBSNSettings }) => {
         const SUBSCRIPTION_ITEM_TYPE_CLOUD = 1;

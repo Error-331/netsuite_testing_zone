@@ -8,8 +8,8 @@ define([
         'N/format',
         './../../custom_modules/bs_cm_transaction_utils',
         './../../custom_modules/bs_cm_network_utils',
-        './../../custom_modules/bs_cm_general_utils',
-        './../../custom_modules/bs_cm suite_billing_settings_utils',
+        '../../custom_modules/utilities/bs_cm_general_utils',
+        '../../custom_modules/utilities/bs_cm suite_billing_settings_utils',
         './../../custom_modules/bs_cm_csv_utils'
     ],
     /**

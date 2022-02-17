@@ -4,7 +4,7 @@
  */
 define([
     'N/file',
-        './../../custom_modules/bs_cm_general_utils',
+        '../../custom_modules/utilities/bs_cm_general_utils',
         './../../custom_modules/bs_cm_csv_utils'
     ],
     /**

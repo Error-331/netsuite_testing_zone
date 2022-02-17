@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  */
 define([
-        './bs_cm_general_utils',
+        './utilities/bs_cm_general_utils',
         './data_structures/bs_cm_bsnc_network',
         './data_structures/bs_cm_bsnc_user',
         './bs_cm_soap_utils',

@@ -1,7 +1,7 @@
 /**
  * @NApiVersion 2.1
  */
-define(['./bs_cm_environment_utils', './bs_cm_general_utils'],
+define(['./../bs_cm_environment_utils', './bs_cm_general_utils'],
     (
         { prepareCustomEnvironmentSettingsSearch },
         { oneTimeMemoizer }
@@ -277,6 +277,12 @@ define(['./bs_cm_environment_utils', './bs_cm_general_utils'],
             priceLevel45,
             priceLevelCustom,
             priceLevelSupport,
+
+            netTypeCloud,
+            netTypeCom,
+            netTypeBSNEE,
+
+            invoiceForm,
 
             initSuiteBillingBSNEnvSettings: oneTimeMemoizer(initSuiteBillingBSNEnvSettings),
             initSuiteBillingBSNServerEnvironmentSettings: oneTimeMemoizer(initSuiteBillingBSNServerEnvironmentSettings),

@@ -3,7 +3,7 @@
  */
 define([
     './moment.js',
-    './bs_cm_general_utils',
+    './utilities/bs_cm_general_utils',
     ],
     (moment, { isNullOrEmpty }) => {
         const getUTCDate = (dateToConvert) => {
