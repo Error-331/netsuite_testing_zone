@@ -19,7 +19,6 @@
         "isomorphic-fetch-extended": "2.0.2"
     },
     "devDependencies": {
-        "jest": "^27.0.6",
         "@oracle/suitecloud-unit-testing": "^1.1.5",
         "@types/lodash": "4.14.175",
         "@types/regenerator-runtime": "0.13.1",
@@ -34,6 +33,8 @@
         "@babel/preset-typescript": "7.15.0",
         "@babel/runtime": "7.15.4",
         "babel-loader": "8.2.2",
+        "jest": "^27.0.6",
+        "soap": "0.43.0",
         "cross-env": "7.0.3",
         "typescript": "4.4.4",
         "gulp": "4.0.2",
