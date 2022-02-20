@@ -12,13 +12,18 @@ define([
         runtime,
         { logExecution }
     ) => {
+        function getScriptParameterByName(name) {
+            const scriptObj = runtime.getCurrentScript();
+            return scriptObj.getParameter({ name });
+        }
+
         function printCurrentScriptRemainingUsage() {
             const scriptObj = runtime.getCurrentScript();
             logExecution('DEBUG', 'Units Left', scriptObj.getRemainingUsage());
         }
 
         return {
+            getScriptParameterByName,
             printCurrentScriptRemainingUsage,
         }
-
     });
