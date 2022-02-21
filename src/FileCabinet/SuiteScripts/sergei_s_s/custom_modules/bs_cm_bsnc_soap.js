@@ -5,8 +5,8 @@ define([
         './utilities/bs_cm_general_utils',
         './data_structures/bs_cm_bsnc_network',
         './data_structures/bs_cm_bsnc_user',
-        './bs_cm_soap_utils',
-        './bs_cm_date_utils',
+        './utilities/bs_cm_soap_utils',
+        './utilities/bs_cm_date_utils',
         'N/runtime',
         'N/https',
         'N/xml'
