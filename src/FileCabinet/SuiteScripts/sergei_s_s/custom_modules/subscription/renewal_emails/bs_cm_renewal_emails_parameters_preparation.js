@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  */
 define([
-        '../../utilities/bs_cm_general_utils'
+        './../../utilities/bs_cm_general_utils'
     ],
     (
         {isNullOrEmpty}
@@ -182,10 +182,49 @@ define([
             }
         }
 
+        function getInitialRenewalEmailsParamsBySearchResult(searchResult) {
+            const subValues = {};
+
+            subValues.customerId = searchResult.getValue('billto');
+            subValues.customerName = searchResult.getText('billto');
+            subValues.customerEmail = searchResult.getValue('email', 'customer');
+            subValues.terms = parseInt(searchResult.getValue('formulatext'));
+            subValues.daysLeft = parseInt(searchResult.getValue('formulanumeric'));
+            subValues.enduserId = searchResult.getValue('custrecord_bsn_sub_end_user', 'subscription');
+            subValues.enduserName = searchResult.getText('custrecord_bsn_sub_end_user', 'subscription');
+            subValues.enduserEmail = '';
+            subValues.billingAccount = searchResult.getValue('billingaccount');
+            subValues.billingAccountCountry = searchResult.getValue('custrecord_ba_country_code', 'billingaccount') || '';
+            subValues.billingAccountCC = searchResult.getValue('custrecord_payop_ccid', 'billingaccount');
+            subValues.ccNumber = '';
+            subValues.startDate = searchResult.getValue('startdate', 'subscription');
+            subValues.endDate = searchResult.getValue('enddate', 'subscription');
+            subValues.daysAfter = parseInt(searchResult.getValue('formulanumeric')) * (-1);
+            subValues.plan = searchResult.getValue('subscriptionplan', 'subscription');
+            subValues.renewalNumber = searchResult.getValue('renewalnumber', 'subscription');
+            subValues.status = searchResult.getValue('status', 'subscription');
+            subValues.adminEmail = searchResult.getValue('custrecord_sub_network_admin', 'subscription');
+            subValues.networkId = searchResult.getValue('custrecord_sub_network_id', 'subscription');
+            subValues.bsnType = searchResult.getValue('custrecord_bsn_type', 'subscription');
+            subValues.bsnTypeName = searchResult.getText('custrecord_bsn_type', 'subscription');
+            subValues.salesRep = searchResult.getValue('salesrep', 'customer');
+            subValues.salesRepName = searchResult.getText('salesrep', 'customer');
+            subValues.amount = searchResult.getValue('amount');
+            subValues.subscriptionId = searchResult.getValue('subscription');
+            subValues.subscription = searchResult.getValue('name', 'subscription');
+            subValues.overrideSuspension = searchResult.getValue('custrecord_sub_override_suspension', 'subscription') || 0;
+            subValues.po = searchResult.getValue('custrecord_bs_subscription_po', 'subscription');
+            subValues.networkName = searchResult.getValue('custrecord_sub_network_name', 'subscription');
+            subValues.networkAdmin = searchResult.getValue('custrecord_sub_network_admin', 'subscription');
+
+            return subValues;
+        }
+
         return {
             getEmailParamsObjectDummy,
             getRenewalEmailParamsForBSN,
             getRenewalEmailParamsForBSNEE,
             bsnRenewalEmailFromTo,
+            getInitialRenewalEmailsParamsBySearchResult,
         }
     });
