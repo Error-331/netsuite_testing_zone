@@ -226,7 +226,7 @@ define([
                 throw new Error('Error: subscriptionIds Empty, nothing to delete.');
             }
 
-            const deleted = 0;
+            let deleted = 0;
 
             do {
                 let soapSubscriptionIds = '';
