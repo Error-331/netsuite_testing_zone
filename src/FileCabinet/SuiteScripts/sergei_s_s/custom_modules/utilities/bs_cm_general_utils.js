@@ -3,6 +3,13 @@
  */
 define([],
     () => {
+        const isArray = (input) => {
+            return (
+                input instanceof Array ||
+                Object.prototype.toString.call(input) === '[object Array]'
+            );
+        }
+
         const isNullOrEmpty = (value) => {
             if (value === undefined || value === null) {
                 return true;
@@ -50,6 +57,7 @@ define([],
         }
 
         return {
+            isArray,
             isNullOrEmpty,
             defaultTo,
             logExecution,
