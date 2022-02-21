@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  */
 define([
-    './moment.js',
+    './../moment.js',
     './utilities/bs_cm_general_utils',
     ],
     (moment, { isNullOrEmpty }) => {
