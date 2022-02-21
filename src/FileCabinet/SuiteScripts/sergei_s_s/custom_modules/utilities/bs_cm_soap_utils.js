@@ -2,13 +2,11 @@
  * @NApiVersion 2.1
  */
 define([
-        './bs_cm_general_utils',
         './bs_cm_date_utils',
-        './utilities/bs_cm suite_billing_settings_utils',
+        './bs_cm suite_billing_settings_utils',
         './bs_cm_crypto_utils',
     ],
     (
-        { logExecution, isNullOrEmpty },
         { getUTCDate },
         { getCredsBSNC },
         { encodeStringToBase64 },
