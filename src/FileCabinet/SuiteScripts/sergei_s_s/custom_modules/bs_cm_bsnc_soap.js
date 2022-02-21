@@ -564,13 +564,14 @@ define([
                 } while(findMore === 'true');
 
                 res.subscriptions = subscriptions;
-            } catch(e){
+            } catch(e) {
                 logExecution('DEBUG', 'Exception ', e.message );
                 logExecution('DEBUG', 'Exception ', e.stack);
                 logExecution('DEBUG', 'Exception ', e.toString());
 
                 res.error = e.message;
             }
+
             return res;
         }
 
