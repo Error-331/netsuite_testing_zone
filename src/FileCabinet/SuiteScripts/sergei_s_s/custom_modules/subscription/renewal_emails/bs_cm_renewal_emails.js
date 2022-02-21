@@ -53,7 +53,7 @@ define([
             let message = '';
             if(!isNullOrEmpty(ccnumber)) {
                 let pastdue = extend || 0;
-                let renewDate = format.parse({value: fsubexpdate});
+                let renewDate = format.parse({ value: fsubexpdate, type: format.type.DATE});
                 let dToday = new Date();
                 let daysToSubExp = Math.ceil(renewDate - dToday) / (1000 * 60 * 60 * 24);
                 let ccDaysLeft = calcSBCCDaysToExpiration(ccexpdate);
@@ -73,6 +73,16 @@ define([
         function sendEmailByTemplate(author, recipients, subject, body, cc, bcc, records, attachments) {
             const preparedBody = body.replace(/{current_year}/g, new Date().getFullYear());
 
+            log.debug('--s1--')
+            log.debug(author)
+            log.debug(recipients)
+            log.debug(subject)
+            log.debug(preparedBody)
+            log.debug(cc)
+            log.debug(bcc)
+            log.debug(attachments)
+            log.debug('--s2--')
+
             email.send({
                 author,
                 recipients,
@@ -87,12 +97,11 @@ define([
         function sendEmailUsingBrightSignTemplate(args) {
             if( args.template ) {
                 const expiration = prepareSBCCExpirationMessage(args.ccNumber, args.ccExpDate, args.startDate, args.overrideSuspension);
-                const emailMerger = render.mergeEmail({
+                const mergeResult = render.mergeEmail({
                     templateId: args.template, //TODO: it seem that this is wrong - we need an id here
                 });
 
-                const mergeResult = emailMerger.merge();
-                let emailBody = mergeResult.getBody();
+                let emailBody = mergeResult.body;
 
                 emailBody = emailBody.replace(/{email_body}/g, args.mailBody);
                 emailBody = emailBody.replace(/{subscription}/g, args.subscription);
@@ -109,7 +118,7 @@ define([
                 emailBody = emailBody.replace(/{daysafter}/g, args.daysAfter);
                 emailBody = emailBody.replace(/{terms}/g, args.daysAfter);
 
-                let emailSubject = mergeResult.getSubject();
+                let emailSubject = mergeResult.subject;
 
                 emailSubject = emailSubject.replace(/{subscription}/g, args.subscription);
                 emailSubject = emailSubject.replace(/{netname}/g, args.networkName);
@@ -171,15 +180,16 @@ define([
 
             logExecution('DEBUG', 'suspendDay', suspendDay);
 
-            let suspendDate = format.parse({ value: incoming.startDate })
+            let suspendDate = format.parse({ value: incoming.startDate, type: format.Type.DATE })
             suspendDate.setDate( suspendDate.getDate() + suspendDay );
+
             logExecution('DEBUG', 'suspendDate', suspendDate);
 
             const args = {
                 fromId: fromId,
                 recipient: recipient,
                 startDate: incoming.startDate,
-                suspendDate: format.format({ value: suspendDate }),
+                suspendDate: format.format({ value: suspendDate, type: format.Type.DATE }),
                 overrideSuspension: parseInt(incoming.overrideSuspension),
                 ccExpDate: '',
                 ccNumber: incoming.ccNumber,
@@ -213,6 +223,7 @@ define([
 
             if( !isNullOrEmpty( recType ) && !isNullOrEmpty( template ) && !isNullOrEmpty( recipient ) ){
                 args.mailSubject = 'New BSN.cloud network notification';
+
                 const mailSent = sendEmailUsingBrightSignTemplate(args);
 
                 if( mailSent ) {
