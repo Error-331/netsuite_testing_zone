@@ -6,7 +6,7 @@ define(['N/render'],
  * @param{render} render
  */
     (render) => {
-        function renderTransactionTPDF(entityId) {
+        function renderTransactionPDF(entityId) {
             return render.transaction({
                 entityId,
                 printMode: render.PrintMode.PDF
@@ -14,6 +14,6 @@ define(['N/render'],
         }
 
         return {
-            renderTransactionTPDF,
+            renderTransactionPDF,
         }
     });
