@@ -4,9 +4,6 @@
  */
 require([
         'N/record',
-        'N/search',
-        'N/file',
-        'N/format',
        // './../custom_modules/moment',
         'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_general_utils',
         'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_runtime_utils',
@@ -18,6 +15,7 @@ require([
         'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_email_search_columns',
         'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_renderers',
         'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_templates',
+        'SuiteScripts/sergei_s_s/custom_modules/subscription/renewal_emails/bs_cm_renewal_emails',
         'SuiteScripts/sergei_s_s/custom_modules/subscription/network/bs_cm_network_operations',
     ],
     /**
@@ -25,9 +23,6 @@ require([
      */
     (
         record,
-        search,
-        file,
-        format,
         //moment,
         { isNullOrEmpty, logExecution },
         { getScriptParameterByName, printCurrentScriptRemainingUsage },
@@ -48,12 +43,9 @@ require([
         { addZeroDaysColumn },
         { renderTransactionPDF },
         { getEmailTemplateByCode },
+        { sendRecurringEmail },
         { networkSuspend, networkEmpty },
     ) => {
-
-
-
-
         function bsnGetMailingList(period, subtype, hascc){
             let settings;
 
@@ -122,7 +114,7 @@ require([
                             let override = false;
                             const subValues = getInitialRenewalEmailsParamsBySearchResult(searchResult);
 
-                            if( settings.from == 0 ) {
+                            if(settings.from == 0) {
                                 subValues.invoiceId = searchResult.getValue('internalid', 'invoice');
                             }
 
@@ -142,17 +134,17 @@ require([
                                             sublistId: 'paymentinstruments'
                                         });
 
-                                        for (let n = 1; n <= lineCount; n++) {
+                                        for (let line = 1; n <= lineCount; n++) {
                                             const ccID = custRec.getSublistValue({
                                                 sublistId: 'paymentinstruments',
                                                 fieldId: 'id',
-                                                line: n
+                                                line,
                                             });
 
                                             const ccMask = custRec.getSublistValue({
                                                 sublistId: 'paymentinstruments',
                                                 fieldId: 'mask',
-                                                line: n
+                                                line,
                                             });
 
                                             if (ccID === subValues.billingAccountCC) {
@@ -192,12 +184,12 @@ require([
                                             id:  subValues.subscriptionId
                                         });
 
-                                        if (subRec) {setValue
+                                        if (subRec) {
                                             if (settings.suspend) {
-                                                subRec.setValue('custrecord_sb_sub_network_suspended', 'T');
+                                                subRec.setValue('custrecord_sb_sub_network_suspended', true);
                                             }
 
-                                            subRec.setValue(settings.check, 'T');
+                                            subRec.setValue(settings.check, true);
                                             const submitRes = subRec.save();
 
                                             if (submitRes) {
@@ -227,7 +219,7 @@ require([
                                                     });
 
                                                     if (subRec) {
-                                                        subRec.setValue(settings.check, 'T');
+                                                        subRec.setValue(settings.check, true);
                                                         const submitRes = subRec.save();
 
                                                         if (submitRes) {
@@ -264,7 +256,7 @@ require([
                             }
 
                         });
-
+return;
                         for (let i = 0; i < searchSubs[k].length; i++) {
                             if (settings.suspend) {
                                 if (parseInt(subValues.bsnType) === netTypeCom) {
