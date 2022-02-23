@@ -73,16 +73,6 @@ define([
         function sendEmailByTemplate(author, recipients, subject, body, cc, bcc, records, attachments) {
             const preparedBody = body.replace(/{current_year}/g, new Date().getFullYear());
 
-            log.debug('--s1--')
-            log.debug(author)
-            log.debug(recipients)
-            log.debug(subject)
-            log.debug(preparedBody)
-            log.debug(cc)
-            log.debug(bcc)
-            log.debug(attachments)
-            log.debug('--s2--')
-
             email.send({
                 author,
                 recipients,
