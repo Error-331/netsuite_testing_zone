@@ -31,9 +31,9 @@ define([],
         }
 
         const logExecution = (type, title, details) => {
-            const logMessage = `${type} ${title} ${details}`;
+            const logTitle = `${type} ${title}`;
 
-            log.debug(logMessage);
+            log.debug({title: logTitle, details});
         };
 
         const oneTimeMemoizer = (functionToMemoize) => {

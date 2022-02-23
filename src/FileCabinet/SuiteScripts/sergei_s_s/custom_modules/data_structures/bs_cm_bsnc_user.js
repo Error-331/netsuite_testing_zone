@@ -1,7 +1,7 @@
 /**
  * @NApiVersion 2.1
  */
-define(['../bs_cm_date_utils', 'N/xml'],
+define(['../utilities/bs_cm_date_utils', 'N/xml'],
     
     (
         { transformUTCDateToPSTDate },

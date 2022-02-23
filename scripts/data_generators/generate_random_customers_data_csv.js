@@ -1,7 +1,7 @@
 // external imports
 
 // local imports
-const { generateRandomUniqueCustomersDataCSV } = require('./../../src/utilities/resources/customers');
+const { generateRandomUniqueCustomersDataCSV } = require('../../src/Utilities/resources/customers');
 
 // implementation
 

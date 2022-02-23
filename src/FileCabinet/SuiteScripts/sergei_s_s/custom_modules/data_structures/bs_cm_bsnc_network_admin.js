@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  */
 define([
-        '../bs_cm_date_utils',
+        '../utilities/bs_cm_date_utils',
         'N/xml',
     ],
     

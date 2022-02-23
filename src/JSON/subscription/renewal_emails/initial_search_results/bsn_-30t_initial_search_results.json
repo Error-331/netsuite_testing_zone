@@ -1,0 +1,92 @@
+[
+    [
+        {
+            "recordType": "charge",
+            "id": "27202",
+            "values": {
+                "billto": [
+                    {
+                        "value": "2505",
+                        "text": "C-220 Midwich Limited : Midwich Limited UK"
+                    }
+                ],
+                "customer.terms": [
+                    {
+                        "value": "2",
+                        "text": "Net 30"
+                    }
+                ],
+                "customer.email": "accounts.payable@midwich.com",
+                "customer.salesrep": [
+                    {
+                        "value": "192012",
+                        "text": "Paul Corsbie-Smith"
+                    }
+                ],
+                "use": "Actual",
+                "chargetype": "Recurring Service",
+                "id": "27202",
+                "rate": "64.35",
+                "quantity": "17",
+                "amount": "1093.95",
+                "chargedate": "3/5/2022",
+                "billdate": "3/5/2022",
+                "servicestartdate": "3/5/2022",
+                "serviceenddate": "3/4/2023",
+                "stage": "Ready",
+                "runid": "-1",
+                "pricePlan.startdate": "3/5/2022",
+                "pricePlan.actualamount": "1093.95",
+                "pricePlan.quantity": "17",
+                "subscription": [
+                    {
+                        "value": "5914",
+                        "text": "Suite.cloud 1 Year - 3/5/2022"
+                    }
+                ],
+                "subscription.name": "Suite.cloud 1 Year - 3/5/2022",
+                "subscription.status": [
+                    {
+                        "value": "PENDING_ACTIVATION",
+                        "text": "Pending Activation"
+                    }
+                ],
+                "subscription.renewalnumber": "0",
+                "subscription.startdate": "3/5/2022",
+                "subscription.enddate": "3/4/2023",
+                "subscription.custrecord_bsn_sub_end_user": [
+                    {
+                        "value": "2505",
+                        "text": "C-220 Midwich Limited : Midwich Limited UK"
+                    }
+                ],
+                "subscription.subscriptionplan": [
+                    {
+                        "value": "888",
+                        "text": "Suite.cloud 1 Year"
+                    }
+                ],
+                "subscription.custrecord_sub_network_id": "12936",
+                "subscription.custrecord_bsn_type": [
+                    {
+                        "value": "1",
+                        "text": "BSN.cloud"
+                    }
+                ],
+                "subscription.custrecord_sub_network_name": "BBVHS2TEST",
+                "subscription.custrecord_sub_network_admin": "mat.stenner@talkwire.co.uk",
+                "subscription.custrecord_bs_subscription_po": "",
+                "subscription.custrecord_sub_override_suspension": "",
+                "billingaccount": [
+                    {
+                        "value": "9337",
+                        "text": "5629"
+                    }
+                ],
+                "billingAccount.custrecord_payop_ccid": "",
+                "formulatext": "0",
+                "formulanumeric": "-16"
+            }
+        }
+    ]
+]

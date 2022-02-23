@@ -6,7 +6,7 @@ const {
     RESOURCE_GOODS_RCA_CABLES_NAMES,
 } = require('./../../src/constants/resources');
 
-const { generateRandomUniqueVendorItemsDataCSV } = require('./../../src/utilities/resources/vendors/items');
+const { generateRandomUniqueVendorItemsDataCSV } = require('../../src/Utilities/resources/vendors/items');
 
 // implementation
 

@@ -14,7 +14,7 @@ const {
     PATH_TO_RESOURCES_JSON_PHONES,
 } = require('./../../src/constants/resources');
 
-const { pickRandomArrayItem } = require('./../../src/utilities/data_structures/arrays');
+const { pickRandomArrayItem } = require('../../src/Utilities/data_structures/arrays');
 
 // implementation
 async function readResourcesDirectory(pathToDi) {

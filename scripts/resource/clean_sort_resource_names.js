@@ -13,7 +13,7 @@ const {
     PATH_TO_RESOURCES_JSON_PHONES,
 } = require('./../../src/constants/resources');
 
-const { resolvePathsArray } = require('./../../src/utilities/fs/paths');
+const { resolvePathsArray } = require('../../src/Utilities/fs/paths');
 
 // implementation
 // TODO: commit and then refaktor
