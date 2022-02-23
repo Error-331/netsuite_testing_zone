@@ -49,18 +49,12 @@ require([
         function bsnGetMailingList(period, subtype, hascc){
             let settings;
 
-            try {
-                settings = getRenewalEmailParamsForBSN(period, subtype, '');
-            } catch(error) {
-                logExecution('ERROR', 'Wrong data', 'Stopping.');
-                return;
-            }
-
-            const checkCC = hascc || false;
             printCurrentScriptRemainingUsage();
 
+            settings = getRenewalEmailParamsForBSN(period, subtype, '');
+
+            const checkCC = hascc || false;
             const isTerms = settings.isTerms;
-            const sendToSales = settings.sendToSales;
 
             let renewalChargeUniSearch, newFilters;
 
@@ -111,7 +105,6 @@ require([
                         const pendingSearch = getEmailTemplateByCode(period, 'searchId');
 
                         searchSubs[k].each((searchResult) => {
-                            let override = false;
                             const subValues = getInitialRenewalEmailsParamsBySearchResult(searchResult);
 
                             if(settings.from == 0) {
@@ -163,7 +156,9 @@ require([
                             const isDisty = subValues.networkAdmin !== subValues.customerEmail;
                             settings = getRenewalEmailParamsForBSN(period, subtype, subValues.billingAccountCountry);
 
+                            let override = false;
                             const tranasactionId = settings.attachInvoice ? subValues.invoiceId : null;
+
                             if (!isNullOrEmpty(subValues.overrideSuspension)) {
                                 override = true;
                             }
@@ -239,6 +234,17 @@ require([
                                         logExecution('DEBUG', 'Email not sent', 'No End User Email. Skipping...');
                                     }
                                 }
+
+                                try {
+                                    settings = getRenewalEmailParamsForBSN(period, subtype, '');
+                                } catch(error) {
+                                    logExecution('ERROR', 'Wrong data', 'Stopping.');
+                                    return;
+                                }
+
+
+                                const sendToSales = settings.sendToSales;
+
                                 if (sendToSales && (bsnIsMoreThanNSubs(subValues.networkId, subValues.bsnType, 25) || subtype == 'bsnee')) {
                                     const salesSent = sendRecurringEmail(subValues, 'sales', salesTemplate, tranasactionId);
 
@@ -263,17 +269,17 @@ return;
                                    // const delResult = networkEmpty(subValues.networkId, subValues.subscriptionId);
 
                                     if (delResult) {
-                                        nlapiLogExecution('DEBUG', 'EMPTY', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' is empty.');
+                                        logExecution('DEBUG', 'EMPTY', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' is empty.');
                                     } else {
-                                        nlapiLogExecution('DEBUG', 'EMPTY', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' was not emptied.');
+                                        logExecution('DEBUG', 'EMPTY', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' was not emptied.');
                                     }
                                 } else if (parseInt(subValues.bsnType) === netTypeCloud) {
                                     //const suspendResult = networkSuspend(subValues.networkId, true);
 
                                     if (suspendResult) {
-                                        nlapiLogExecution('DEBUG', 'SUSPEND', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' is suspended.');
+                                        logExecution('DEBUG', 'SUSPEND', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' is suspended.');
                                     } else {
-                                        nlapiLogExecution('DEBUG', 'SUSPEND', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' was not suspended.');
+                                        logExecution('DEBUG', 'SUSPEND', 'Network "' + subValues.networkName + '" ID: ' + subValues.networkId + ' was not suspended.');
                                     }
                                 }
                             }
