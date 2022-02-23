@@ -2,12 +2,27 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/email', 'N/search'],
+define([
+        'N/search',
+        './../../custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_parameters_preparation',
+        './../../custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_map_reduce',
+        './../../custom_modules/utilities/bs_cm_general_utils',
+    ],
     /**
- * @param{email} email
- * @param{search} search
- */
-    (email, search) => {
+            */
+    (
+        search,
+        { getRenewalEmailParamsForBSN },
+        {
+            prepareAndExecuteSearches,
+            prepareRenewalEmailsParamsBySearchResult,
+            addCCNumberToRenewalEmailsParams,
+            sendEmailToCustomerAndSuspendNetwork,
+            sendEmailToOwnerAndSuspendNetwork,
+            sendEmailToSales,
+        },
+        { isNullOrEmpty, logExecution },
+    ) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -22,7 +37,18 @@ define(['N/email', 'N/search'],
          */
 
         const getInputData = (inputContext) => {
+            const period = '-30t';
+            const subtype = 'bsn';
 
+            const settings = getRenewalEmailParamsForBSN(period, subtype, '');
+
+            try {
+                let searchesResults = prepareAndExecuteSearches(period, subtype, false, settings);
+                return prepareRenewalEmailsParamsBySearchResult(settings, searchesResults);
+            } catch (e) {
+                log.debug('Search error');
+                log.debug(e)
+            }
         }
 
         /**
@@ -43,7 +69,47 @@ define(['N/email', 'N/search'],
          */
 
         const map = (mapContext) => {
+            try {
+                const period = '-30t';
+                const subtype = 'bsn';
 
+                let searchesResults = JSON.parse(mapContext.value);
+                searchesResults = addCCNumberToRenewalEmailsParams(searchesResults);
+
+                const isDisty = searchesResults.networkAdmin !== searchesResults.customerEmail;
+                let settings = getRenewalEmailParamsForBSN(period, subtype, searchesResults.billingAccountCountry);
+
+                let override = false;
+                const tranasactionId = settings.attachInvoice ? searchesResults.invoiceId : null;
+
+                if (!isNullOrEmpty(searchesResults.overrideSuspension)) {
+                    override = true;
+                }
+
+                if (!isNullOrEmpty(searchesResults.customerEmail)) {
+                    sendEmailToCustomerAndSuspendNetwork(subtype, period, isDisty, tranasactionId, settings, searchesResults);
+
+                    if(isDisty && settings.sendToOwner) {
+                        sendEmailToOwnerAndSuspendNetwork(period, isDisty, settings, searchesResults);
+                    }
+
+                    try {
+                        settings = getRenewalEmailParamsForBSN(period, subtype, '');
+                    } catch(error) {
+                        logExecution('ERROR', 'Wrong data', 'Stopping.');
+                        return;
+                    }
+
+                    sendEmailToSales(subtype, period, tranasactionId, settings, searchesResults);
+
+                } else {
+                    // TODO: Send Email to Sales if no email address on record
+                    logExecution('DEBUG', 'Email not sent', `Customer "${searchesResults.customerName}" has no Email. Skipping...`);
+                }
+            } catch (e) {
+                log.debug('Map error');
+                log.debug(e);
+            }
         }
 
         /**
