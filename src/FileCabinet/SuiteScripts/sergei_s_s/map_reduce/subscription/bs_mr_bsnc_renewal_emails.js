@@ -4,6 +4,7 @@
  */
 define([
         'N/search',
+        'N/runtime',
         './../../custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_parameters_preparation',
         './../../custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_map_reduce',
         './../../custom_modules/utilities/bs_cm_general_utils',
@@ -12,6 +13,7 @@ define([
             */
     (
         search,
+        runtime,
         { getRenewalEmailParamsForBSN },
         {
             prepareAndExecuteSearches,
@@ -37,8 +39,9 @@ define([
          */
 
         const getInputData = (inputContext) => {
-            const period = '-30t';
-            const subtype = 'bsn';
+            const currentScript = runtime.getCurrentScript();
+            const period = currentScript.getParameter({ name: 'custscriptperiod' });
+            const subtype = currentScript.getParameter({ name: 'custscriptsubtype' });
 
             const settings = getRenewalEmailParamsForBSN(period, subtype, '');
 
@@ -70,42 +73,12 @@ define([
 
         const map = (mapContext) => {
             try {
-                const period = '-30t';
-                const subtype = 'bsn';
-
                 let searchesResults = JSON.parse(mapContext.value);
-                searchesResults = addCCNumberToRenewalEmailsParams(searchesResults);
 
-                const isDisty = searchesResults.networkAdmin !== searchesResults.customerEmail;
-                let settings = getRenewalEmailParamsForBSN(period, subtype, searchesResults.billingAccountCountry);
-
-                let override = false;
-                const tranasactionId = settings.attachInvoice ? searchesResults.invoiceId : null;
-
-                if (!isNullOrEmpty(searchesResults.overrideSuspension)) {
-                    override = true;
-                }
-
-                if (!isNullOrEmpty(searchesResults.customerEmail)) {
-                    sendEmailToCustomerAndSuspendNetwork(subtype, period, isDisty, tranasactionId, settings, searchesResults);
-
-                    if(isDisty && settings.sendToOwner) {
-                        sendEmailToOwnerAndSuspendNetwork(period, isDisty, settings, searchesResults);
-                    }
-
-                    try {
-                        settings = getRenewalEmailParamsForBSN(period, subtype, '');
-                    } catch(error) {
-                        logExecution('ERROR', 'Wrong data', 'Stopping.');
-                        return;
-                    }
-
-                    sendEmailToSales(subtype, period, tranasactionId, settings, searchesResults);
-
-                } else {
-                    // TODO: Send Email to Sales if no email address on record
-                    logExecution('DEBUG', 'Email not sent', `Customer "${searchesResults.customerName}" has no Email. Skipping...`);
-                }
+                mapContext.write({
+                    key: searchesResults.customerId,
+                    value: { ...searchesResults }
+                });
             } catch (e) {
                 log.debug('Map error');
                 log.debug(e);
@@ -128,7 +101,15 @@ define([
          * @since 2015.2
          */
         const reduce = (reduceContext) => {
-
+            try {
+                reduceContext.write({
+                    key: reduceContext.key,
+                    value: JSON.parse(reduceContext.values[0])
+                });
+            } catch (e) {
+                log.debug('Reduce error');
+                log.debug(e);
+            }
         }
 
 
@@ -152,7 +133,51 @@ define([
          * @since 2015.2
          */
         const summarize = (summaryContext) => {
+            try {
+                const currentScript = runtime.getCurrentScript();
+                const period = currentScript.getParameter({ name: 'custscriptperiod' });
+                const subtype = currentScript.getParameter({ name: 'custscriptsubtype' });
 
+                summaryContext.output.iterator().each((key, value) => {
+                    let searchesResults = JSON.parse(value);
+                    searchesResults = addCCNumberToRenewalEmailsParams(searchesResults);
+
+                    const isDisty = searchesResults.networkAdmin !== searchesResults.customerEmail;
+                    let settings = getRenewalEmailParamsForBSN(period, subtype, searchesResults.billingAccountCountry);
+
+                    let override = false;
+                    const tranasactionId = settings.attachInvoice ? searchesResults.invoiceId : null;
+
+                    if (!isNullOrEmpty(searchesResults.overrideSuspension)) {
+                        override = true;
+                    }
+
+                    if (!isNullOrEmpty(searchesResults.customerEmail)) {
+                        sendEmailToCustomerAndSuspendNetwork(subtype, period, isDisty, tranasactionId, settings, searchesResults);
+
+                        if(isDisty && settings.sendToOwner) {
+                            sendEmailToOwnerAndSuspendNetwork(period, isDisty, settings, searchesResults);
+                        }
+
+                        try {
+                            settings = getRenewalEmailParamsForBSN(period, subtype, '');
+                        } catch(error) {
+                            logExecution('ERROR', 'Wrong data', 'Stopping.');
+                            return;
+                        }
+
+                        sendEmailToSales(subtype, period, tranasactionId, settings, searchesResults);
+                    } else {
+                        // TODO: Send Email to Sales if no email address on record
+                        logExecution('DEBUG', 'Email not sent', `Customer "${searchesResults.customerName}" has no Email. Skipping...`);
+                    }
+
+                    return true;
+                });
+            } catch (e) {
+                log.debug('Summary error');
+                log.debug(e);
+            }
         }
 
         return {getInputData, map, reduce, summarize}
