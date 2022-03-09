@@ -135,8 +135,17 @@ define([
         const summarize = (summaryContext) => {
             try {
                 const currentScript = runtime.getCurrentScript();
+
                 const period = currentScript.getParameter({ name: 'custscriptperiod' });
                 const subtype = currentScript.getParameter({ name: 'custscriptsubtype' });
+
+                if (isNullOrEmpty(period)) {
+                    throw new Error('Period is not defined');
+                }
+
+                if (isNullOrEmpty(subtype)) {
+                    throw new Error('Subtype is not defined');
+                }
 
                 summaryContext.output.iterator().each((key, value) => {
                     let searchesResults = JSON.parse(value);
@@ -146,14 +155,14 @@ define([
                     let settings = getRenewalEmailParamsForBSN(period, subtype, searchesResults.billingAccountCountry);
 
                     let override = false;
-                    const tranasactionId = settings.attachInvoice ? searchesResults.invoiceId : null;
+                    const transactionId = settings.attachInvoice ? searchesResults.invoiceId : null;
 
                     if (!isNullOrEmpty(searchesResults.overrideSuspension)) {
                         override = true;
                     }
 
                     if (!isNullOrEmpty(searchesResults.customerEmail)) {
-                        sendEmailToCustomerAndSuspendNetwork(subtype, period, isDisty, tranasactionId, settings, searchesResults);
+                        sendEmailToCustomerAndSuspendNetwork(subtype, period, isDisty, transactionId, settings, searchesResults);
 
                         if(isDisty && settings.sendToOwner) {
                             sendEmailToOwnerAndSuspendNetwork(period, isDisty, settings, searchesResults);
@@ -166,7 +175,7 @@ define([
                             return;
                         }
 
-                        sendEmailToSales(subtype, period, tranasactionId, settings, searchesResults);
+                        sendEmailToSales(subtype, period, transactionId, settings, searchesResults);
                     } else {
                         // TODO: Send Email to Sales if no email address on record
                         logExecution('DEBUG', 'Email not sent', `Customer "${searchesResults.customerName}" has no Email. Skipping...`);
