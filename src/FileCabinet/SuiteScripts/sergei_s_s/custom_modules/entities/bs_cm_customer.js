@@ -17,9 +17,7 @@ define([
             });
         }
 
-        function loadCustomerDefaultBillingAddress(customerId) {
-            const customerRecord = loadCustomerById(customerId, true);
-
+        function filterCustomerDefaultBillingAddress(customerRecord) {
             if (isNullOrEmpty(customerRecord)) {
                 return null;
             }
@@ -71,8 +69,18 @@ define([
             return null;
         }
 
+        function filterCustomerSalesRep(customerRecord) {
+            if (isNullOrEmpty(customerRecord)) {
+                return null;
+            }
+
+            const salesRep = customerRecord.getValue('salesrep');
+            return isNullOrEmpty(salesRep) ? null : parseInt(salesRep);
+        }
+
         return {
             loadCustomerById,
-            loadCustomerDefaultBillingAddress,
+            filterCustomerDefaultBillingAddress,
+            filterCustomerSalesRep,
         }
     });
