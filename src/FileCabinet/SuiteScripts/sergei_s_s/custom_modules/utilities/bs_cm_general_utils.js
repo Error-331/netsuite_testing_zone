@@ -8,10 +8,18 @@ define([],
                 input instanceof Array ||
                 Object.prototype.toString.call(input) === '[object Array]'
             );
-        }
+        };
+
+        const isNil = (value) => {
+            if (value === undefined || value === null) {
+                return true;
+            }
+
+            return false;
+        };
 
         const isNullOrEmpty = (value) => {
-            if (value === undefined || value === null) {
+            if (isNil(value)) {
                 return true;
             }
 
@@ -28,7 +36,7 @@ define([],
             } else {
                 return value;
             }
-        }
+        };
 
         const logExecution = (type, title, details) => {
             const logTitle = `${type} ${title}`;
@@ -54,14 +62,44 @@ define([],
 
         const filterUniqueValues = (inputArray) => {
             return inputArray.filter((element, index, inputArray) => inputArray.indexOf(element) == index);
+        };
+
+        const toSingleValue = (value) => {
+            if (isArray(value)) {
+                return value[0];
+            }
+
+            return value;
         }
+
+        const toInt = (value) => {
+            value = toSingleValue(value);
+
+            if (typeof value !== 'number') {
+                value = parseInt(value);
+            }
+
+            return value;
+        };
+
+        const toArray = (value) => {
+            if (!isArray(value)) {
+                return [value];
+            }
+
+            return value;
+        };
 
         return {
             isArray,
+            isNil,
             isNullOrEmpty,
             defaultTo,
             logExecution,
             oneTimeMemoizer,
             filterUniqueValues,
+            toSingleValue,
+            toInt,
+            toArray,
         }
     });
