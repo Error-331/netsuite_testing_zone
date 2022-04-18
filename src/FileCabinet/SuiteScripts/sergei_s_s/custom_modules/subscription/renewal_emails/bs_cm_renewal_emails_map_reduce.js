@@ -40,7 +40,7 @@ define([
         { getEmailTemplateByCode },
         { sendRecurringEmail },
     ) => {
-        function prepareAndExecuteSearches(period, subtype, hascc, settings) {
+        function prepareAndExecuteSearches(period, subtype, hascc, settings, callback = () => {}) {
             printCurrentScriptRemainingUsage();
 
             const checkCC = hascc || false;
@@ -70,44 +70,67 @@ define([
             }
 
             logExecution('DEBUG', 'filters', newFilters.length);
-            let searchSubs = [];
+            let subValuesList = [];
 
             if(isTerms) {
                 const preparedSearch = createTermsSearch(newColumns, newFilters);
-                searchSubs.push(preparedSearch.run());
+
+                const searchPagedData = preparedSearch.runPaged();
+                searchPagedData.pageRanges.forEach((pageRange) => {
+                    const searchPage = searchPagedData.fetch({index: pageRange.index});
+                    searchPage.data.forEach((searchResult) => {
+                        const preparedResult = prepareRenewalEmailsParamsBySearchResult(settings, searchResult)
+
+                        callback(preparedResult)
+                        subValuesList.push(preparedResult);
+                    });
+                });
             } else {
                 const preparedSearches = createNoneTermsSearches(newColumns, newFilters);
 
                 for (const preparedSearch of preparedSearches) {
-                    searchSubs.push(preparedSearch.run())
+                    const searchPagedData = preparedSearch.runPaged();
+                    searchPagedData.pageRanges.forEach((pageRange) => {
+                        const searchPage = searchPagedData.fetch({index: pageRange.index});
+                        searchPage.data.forEach((searchResult) => {
+                            const preparedResult = prepareRenewalEmailsParamsBySearchResult(settings, searchResult)
+
+                            callback(preparedResult)
+                            subValuesList.push(preparedResult);
+                        });
+                    });
                 }
             }
 
             logExecution('DEBUG', 'searchSubs', JSON.stringify(searchSubs));
             printCurrentScriptRemainingUsage();
 
-            return searchSubs;
+            return subValuesList;
         }
 
-        function prepareRenewalEmailsParamsBySearchResult(settings, searchSubs) {
+
+        function prepareRenewalEmailsParamsBySearchResult(settings, searchResult) {
+            const subValues = getInitialRenewalEmailsParamsBySearchResult(searchResult);
+
+            if(settings.from == 0) {
+                subValues.invoiceId = searchResult.getValue('internalid', 'invoice');
+            }
+
+            logExecution('DEBUG', 'subValues', JSON.stringify(subValues));
+            return subValues;
+        }
+
+        function prepareRenewalEmailsParamsBySearchResults(settings, searchSubs) {
             if (isNullOrEmpty(searchSubs)) {
                 throw new Error('"searchSubs" are not defined')
             }
 
-            const subValuesList = {};
+            const subValuesList = [];
 
             for(let k = 0; k < searchSubs.length; k++) {
                 if (!isNullOrEmpty(searchSubs[k])) {
                     searchSubs[k].each((searchResult) => {
-                        const subValues = getInitialRenewalEmailsParamsBySearchResult(searchResult);
-
-                        if(settings.from == 0) {
-                            subValues.invoiceId = searchResult.getValue('internalid', 'invoice');
-                        }
-
-                        logExecution('DEBUG', 'subValues', JSON.stringify(subValues));
-
-                        subValuesList[`resultSet${k}`] = subValues;
+                        subValuesList.push(prepareRenewalEmailsParamsBySearchResult(settings, searchResult));
                     });
                 }
             }
