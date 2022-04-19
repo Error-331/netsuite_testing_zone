@@ -4,33 +4,74 @@
 define([
     './../data/sales/bs_cm_sales_to_sales_territories',
     './../utilities/bs_cm_general_utils',
+    './../utilities/bs_cm_math_utils'
     ],
     
     (
         { SALES_TO_SALES_TERRITORIES},
         { isArray , isNullOrEmpty, toSingleValue, toInt, toArray },
+        { eq, between }
     ) => {
-
         function checkIsListMemberRule(valuesList, checkValue) {
+            if (isNullOrEmpty(valuesList) || isNullOrEmpty(checkValue)) {
+                throw new Error('Cannot determine whether value is in list - not enough arguments');
+            }
+
+            if (!isArray(valuesList)) {
+                throw new Error('Values list is not array');
+            }
+
             valuesList = toArray(valuesList);
             checkValue = toSingleValue(checkValue);
 
-            return valuesList.includes(checkValue);
+            for (const listValue of valuesList) {
+                let compResult = false;
+
+                if (typeof listValue === 'number' && typeof checkValue !== 'number') {
+                    compResult = listValue === toInt(checkValue);
+                } else if (typeof listValue === 'string' && typeof checkValue !== 'string') {
+                    compResult = listValue === checkValue.toString();
+                } else {
+                    compResult = listValue === checkValue;
+                }
+
+                if (compResult === true) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         function checkTerritoryRuleEquals(realValue, checkValue) {
+            if (isNullOrEmpty(realValue) || isNullOrEmpty(checkValue)) {
+                throw new Error('Cannot determine whether value is equal - not enough arguments');
+            }
+
             realValue = toSingleValue(realValue);
             checkValue = toSingleValue(checkValue);
 
-            return realValue === checkValue;
+            if (typeof realValue === 'string' && typeof checkValue !== 'string') {
+                checkValue = checkValue.toString();
+            }
+
+            if (typeof realValue === 'number' && typeof checkValue !== 'number') {
+                checkValue = toInt(checkValue);
+            }
+
+            return eq(realValue, checkValue);
         }
 
         function checkTerritoryRuleBetween(leftBoundary, rightBoundary, checkValue) {
+            if (isNullOrEmpty(leftBoundary) || isNullOrEmpty(rightBoundary) || isNullOrEmpty(checkValue)) {
+                throw new Error('Cannot determine whether value is in boundaries - not enough arguments');
+            }
+
             leftBoundary = toInt(leftBoundary);
             rightBoundary = toInt(rightBoundary);
             checkValue = toInt(checkValue);
 
-            return checkValue >= leftBoundary && checkValue <= rightBoundary;
+            return between(leftBoundary, rightBoundary, checkValue);
         }
 
         function extractAddressDataByTerritoryKey(key, address) {
@@ -118,6 +159,9 @@ define([
         }
 
         return {
+            checkIsListMemberRule,
+            checkTerritoryRuleEquals,
+            checkTerritoryRuleBetween,
             findSalesRepTerritoryBySalesRepId,
         }
     });
