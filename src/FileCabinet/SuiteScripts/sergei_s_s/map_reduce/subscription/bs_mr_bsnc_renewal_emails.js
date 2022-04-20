@@ -5,15 +5,19 @@
 define([
         'N/search',
         'N/runtime',
+        './../../custom_modules/utilities/bs_cm suite_billing_settings_utils',
         './../../custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_parameters_preparation',
         './../../custom_modules/subscription/renewal_emails/bs_cm_renewal_emails_map_reduce',
+        './../../custom_modules/subscription/network/bs_cm_network_operations',
         './../../custom_modules/utilities/bs_cm_general_utils',
+        './../../custom_modules/utilities/bs_cm_runtime_utils',
     ],
     /**
             */
     (
         search,
         runtime,
+        { netTypeCom, netTypeCloud},
         { getRenewalEmailParamsForBSN },
         {
             prepareAndExecuteSearches,
@@ -23,7 +27,9 @@ define([
             sendEmailToOwnerAndSuspendNetwork,
             sendEmailToSales,
         },
+        { networkEmpty, networkSuspend },
         { isNullOrEmpty, logExecution },
+        { printCurrentScriptRemainingUsage },
     ) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
@@ -46,8 +52,10 @@ define([
             const settings = getRenewalEmailParamsForBSN(period, subtype, '');
 
             try {
-                let searchesResults = prepareAndExecuteSearches(period, subtype, false, settings);
-                return prepareRenewalEmailsParamsBySearchResult(settings, searchesResults);
+                //let searchesResults = prepareAndExecuteSearches(period, subtype, false, settings);
+                ///return prepareRenewalEmailsParamsBySearchResult(settings, searchesResults);
+
+                return [true];
             } catch (e) {
                 log.debug('Search error');
                 log.debug(e)
@@ -73,6 +81,16 @@ define([
 
         const map = (mapContext) => {
             try {
+                const currentScript = runtime.getCurrentScript();
+                const period = currentScript.getParameter({ name: 'custscriptperiod' });
+                const subtype = currentScript.getParameter({ name: 'custscriptsubtype' });
+
+                const settings = getRenewalEmailParamsForBSN(period, subtype, '');
+                prepareAndExecuteSearches(period, subtype, false, settings, (resultRow) => {
+                    log.debug('row', resultRow)
+                });
+
+
                 let searchesResults = JSON.parse(mapContext.value);
 
                 mapContext.write({
@@ -176,6 +194,28 @@ define([
                         }
 
                         sendEmailToSales(subtype, period, transactionId, settings, searchesResults);
+
+                        if (searchesResults.suspend) {
+                            if (parseInt(searchesResults.bsnType) === netTypeCom) {
+                                const delResult = networkEmpty(searchesResults.networkId, searchesResults.subscriptionId);
+
+                                if (delResult) {
+                                    logExecution('DEBUG', 'EMPTY', `Network "${searchesResults.networkName}" ID: ${searchesResults.networkId} is empty.`);
+                                } else {
+                                    logExecution('DEBUG', 'EMPTY', `Network "${searchesResults.networkName}" ID: ${searchesResults.networkId} was not emptied.`);
+                                }
+                            } else if (parseInt(searchesResults.bsnType) === netTypeCloud) {
+                                const suspendResult = networkSuspend(searchesResults.networkId, true);
+
+                                if (suspendResult) {
+                                    logExecution('DEBUG', 'SUSPEND', `Network "${searchesResults.networkName}" ID: ${searchesResults.networkId} is suspended.`);
+                                } else {
+                                    logExecution('DEBUG', 'SUSPEND', `Network "${searchesResults.networkName}" ID: ${searchesResults.networkId} was not suspended.`);
+                                }
+                            }
+                        }
+
+                        printCurrentScriptRemainingUsage();
                     } else {
                         // TODO: Send Email to Sales if no email address on record
                         logExecution('DEBUG', 'Email not sent', `Customer "${searchesResults.customerName}" has no Email. Skipping...`);

@@ -1,4 +1,4 @@
-import { findStateDataByFullName } from './../../../../../src/FileCabinet/SuiteScripts/sergei_s_s/custom_modules/entities/bs_cm_state';
+import { findStateDataByFullName, getStateId } from './../../../../../src/FileCabinet/SuiteScripts/sergei_s_s/custom_modules/entities/bs_cm_state';
 
 jest.mock('N/query', () => {
     const statesMockData = require('../../../../../src/test_data/entities/states/states_general1.json');
@@ -47,6 +47,23 @@ describe('Custom modules / entities / states tests', () => {
             const test1 = () => findStateDataByFullName();
 
             expect(test1).toThrowError();
+        });
+    });
+
+    describe('getStateId function tests', () => {
+        it('it should return correct state id (case 1)', () => {
+            const data = findStateDataByFullName('minnesota');
+            expect(getStateId(data)).toEqual(23)
+        });
+
+        it('it should return correct state id (case 2)', () => {
+            const data = findStateDataByFullName('Norfolk');
+            expect(getStateId(data)).toEqual(283)
+        });
+
+        it('it should return correct state id (case 3)', () => {
+            const data = findStateDataByFullName('Delaware');
+            expect(getStateId(data)).toEqual(7)
         });
     });
 });

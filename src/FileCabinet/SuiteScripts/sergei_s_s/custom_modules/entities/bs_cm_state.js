@@ -1,8 +1,29 @@
 /**
  * @NApiVersion 2.1
  */
-define(['N/query', './../utilities/bs_cm_general_utils'],
-    (query, { isNullOrEmpty, oneTimeMemoizer }) => {
+define([
+        'N/query',
+        './../utilities/bs_cm_general_utils',
+        './../utilities/bs_cm_functional_utils'
+    ],
+    (
+        query,
+        { isNullOrEmpty, oneTimeMemoizer },
+        { lens, view }
+        ) => {
+
+        const sateIdLens = lens(
+            (state) => state?.id,
+            (id, state) => {
+                state.id = id;
+                return state;
+            }
+        );
+
+        const getStateId = (stateObj) => {
+            return view(sateIdLens, stateObj);
+        }
+
         function loadStatesData() {
             const suiteQLQuery = `
                 SELECT
@@ -47,6 +68,7 @@ define(['N/query', './../utilities/bs_cm_general_utils'],
         }
 
         return {
+            getStateId,
             loadStatesData,
             loadStatesDataMemoized,
             findStateDataByFullName,

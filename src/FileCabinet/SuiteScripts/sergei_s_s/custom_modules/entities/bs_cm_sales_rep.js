@@ -4,15 +4,19 @@
 define([
     './../data/sales/bs_cm_sales_to_sales_territories',
     './../utilities/bs_cm_general_utils',
-    './../utilities/bs_cm_math_utils'
+    './../utilities/bs_cm_math_utils',
+    './bs_cm_state',
+    './bs_cm_country',
     ],
     
     (
         { SALES_TO_SALES_TERRITORIES},
         { isArray , isNullOrEmpty, toSingleValue, toInt, toArray },
-        { eq, between }
+        { eq, between },
+        { findStateDataByFullName, getStateId },
+        { findCountryDataByName, getCountryCode2 }
     ) => {
-        function checkIsListMemberRule(valuesList, checkValue) {
+        function checkIsListMemberRule(checkValue, valuesList) {
             if (isNullOrEmpty(valuesList) || isNullOrEmpty(checkValue)) {
                 throw new Error('Cannot determine whether value is in list - not enough arguments');
             }
@@ -43,7 +47,7 @@ define([
             return false;
         }
 
-        function checkTerritoryRuleEquals(realValue, checkValue) {
+        function checkTerritoryRuleEquals(checkValue, realValue) {
             if (isNullOrEmpty(realValue) || isNullOrEmpty(checkValue)) {
                 throw new Error('Cannot determine whether value is equal - not enough arguments');
             }
@@ -62,7 +66,7 @@ define([
             return eq(realValue, checkValue);
         }
 
-        function checkTerritoryRuleBetween(leftBoundary, rightBoundary, checkValue) {
+        function checkTerritoryRuleBetween(checkValue, leftBoundary, rightBoundary) {
             if (isNullOrEmpty(leftBoundary) || isNullOrEmpty(rightBoundary) || isNullOrEmpty(checkValue)) {
                 throw new Error('Cannot determine whether value is in boundaries - not enough arguments');
             }
@@ -75,55 +79,82 @@ define([
         }
 
         function extractAddressDataByTerritoryKey(key, address) {
+            if (isNullOrEmpty(address)) {
+                throw new Error('Address is not set - cannot extract address data');
+            }
+
             let userData;
 
-            switch (key) {
-                case 'Entity_Country':
-                    userData = address?.country;
+            switch (key.toLowerCase()) {
+                case 'entity_country':
+                    userData = isNullOrEmpty(address?.country) ? null : getCountryCode2(findCountryDataByName(address.country));
                     break;
-                case 'Entity_State':
-                    userData = address?.state;
+                case 'entity_state':
+                    userData = isNullOrEmpty(address?.state) ? null : getStateId(findStateDataByFullName(address.state));
                     break;
-                case 'Entity_City':
+                case 'entity_city':
                     userData = address?.city;
                     break;
-                case 'Entity_ZipCode':
+                case 'entity_zipcode':
                     userData = address?.zip;
                     break;
                 default:
-                    throw new Error(`Unrecognized sales territory criteria: ${fldkey}`);
-            }
-
-            if (isNullOrEmpty(userData)) {
-                throw new Error(`Cannot extract address data based on key: ${key}`);
+                    throw new Error(`Unrecognized sales territory criteria: ${key}`);
             }
 
             return userData;
         }
 
-        function checkTerritoryRuleByAddress(ruleData, address) {
+        function executeRuleFunctionByCriteria(criteria, userData, ...inputData) {
+            switch(criteria) {
+                case 'BETWEEN':
+                    return checkTerritoryRuleBetween(userData, ...inputData);
+                case 'EQUALS':
+                    return checkTerritoryRuleEquals(userData, ...inputData);
+                case 'ISLISTMEMBER':
+                    return checkIsListMemberRule(userData, ...inputData);
+                default:
+                    throw new Error(`Unknown criteria: ${criteria}`)
+            }
+        }
+
+        function checkTerritoryRule(ruleData, userData) {
             if (isNullOrEmpty(ruleData)) {
+                return false;
+            }
+
+            const { criteria, data, data2 } = ruleData;
+            return executeRuleFunctionByCriteria(criteria, userData, data, data2);
+        }
+
+        function checkTerritorySubRule(territoryRules, userData) {
+            if (isNullOrEmpty(territoryRules)) {
                 return true;
             }
 
-            const { criteria, fldkey, data, data2 } = ruleData;
-            let userData = extractAddressDataByTerritoryKey(fldkey, address);
+            for (const subRule of territoryRules) {
+                const { subcriteria, linedata, linedata2 } = subRule;
 
-            switch(criteria) {
-                case 'BETWEEN':
-                    return checkTerritoryRuleBetween(data, data2, userData);
-                case 'EQUALS':
-                    return checkTerritoryRuleEquals(data, userData);
-                case 'ISLISTMEMBER':
-                    return checkIsListMemberRule(data, userData);
+                if (executeRuleFunctionByCriteria(subcriteria, userData, linedata, linedata2) === true) {
+                    return true;
+                }
             }
+
+            return false;
         }
 
         function checkTerritoryRulesByAddress(territoryRules, address) {
             for (const territoryRule of territoryRules) {
+                const valueFieldName = territoryRule.rulesData.rules.fldkey;
+                let userData = extractAddressDataByTerritoryKey(valueFieldName, address);
+
+                if (isNullOrEmpty(userData)) {
+                    continue;
+                }
+
                 if (
-                    checkTerritoryRuleByAddress(territoryRule.rulesData, address) &&
-                    checkTerritoryRuleByAddress(territoryRule.subRules, address)
+                    checkTerritoryRule(territoryRule?.rulesData?.rules, userData) &&
+                    checkTerritorySubRule(territoryRule?.subRules, userData)
                 ) {
                     return true;
                 }
@@ -134,8 +165,8 @@ define([
 
         function findSalesRepTerritory(territoriesData, address) {
             for (const territoryData of territoriesData) {
-                if (checkTerritoryRulesByAddress(territoryData.territoryRules)) {
-                    return territoryData;
+                if (checkTerritoryRulesByAddress(territoryData.territoryRules, address)) {
+                    return territoriesData;
                 }
             }
 
@@ -143,14 +174,16 @@ define([
         }
 
         function findSalesRepTerritoryBySalesRepId(salesRepId, address) {
+            if (isNullOrEmpty(salesRepId)) {
+                return null;
+            }
+
             for (const salesData of SALES_TO_SALES_TERRITORIES) {
                 if (salesData.entity === salesRepId) {
                     if (salesData.territoryData.length === 1) {
                         return salesData.territoryData;
                     } else {
-                        findSalesRepTerritory(salesData.territoryData, address);
-                        console.log('pu pu');
-                        return 'su';
+                        return findSalesRepTerritory(salesData.territoryData, address);
                     }
                 }
             }
@@ -162,6 +195,9 @@ define([
             checkIsListMemberRule,
             checkTerritoryRuleEquals,
             checkTerritoryRuleBetween,
+            extractAddressDataByTerritoryKey,
+            checkTerritoryRule,
+            checkTerritorySubRule,
             findSalesRepTerritoryBySalesRepId,
         }
     });
