@@ -2,11 +2,21 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/query', 'N/file', './../custom_modules/bs_cm_csv_utils'],
+define([
+        'N/query',
+        'N/file',
+        './../custom_modules/bs_cm_csv_utils',
+        './../custom_modules/utilities/sql/bs_cm_join_operations',
+    ],
     /**
  * @param{query} query
  */
-    (query, file,{ convertArrayOfObjectsToCSV }) => {
+    (
+        query,
+        file,
+        { convertArrayOfObjectsToCSV },
+        { groupSQLJoinedData }
+    ) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -23,21 +33,24 @@ define(['N/query', 'N/file', './../custom_modules/bs_cm_csv_utils'],
                 Subscription.startdate,
                 Subscription.enddate,
                 Subscription.nextrenewalstartdate,
-                Subscription.custrecord_bsnc_sales_rep,
                 Subscription.billingsubscriptionstatus,
                 
-                SubscriptionCustomer.id AS сustomer_subscriptionCustomerId,
+                Subscription.custrecord_sub_network_admin,
+                Subscription.custrecord_sub_network_name,
+                
+                SubscriptionCustomer.id AS customer_subscriptionCustomerId,
+                SubscriptionCustomer.salesrep AS customer_salesrep,          
                 
                 CustomerBillingAccount.id AS billingAccount_billingAccountId,
                 CustomerBillingAccount.customer AS billingAccount_billingAccountCustomer,
 
-                CustomerAddress.Addr1 As сustomer_Addr1,
-                CustomerAddress.Addr2 As сustomer_Addr2,
-                CustomerAddress.Addr3 As сustomer_Addr3,
-                CustomerAddress.City As сustomer_City,
-                CustomerAddress.State As сustomer_State,
-                CustomerAddress.Zip As сustomer_Zip,
-                CustomerAddress.Country As сustomer_Country,
+                CustomerAddress.Addr1 As customer_Addr1,
+                CustomerAddress.Addr2 As customer_Addr2,
+                CustomerAddress.Addr3 As customer_Addr3,
+                CustomerAddress.City As customer_City,
+                CustomerAddress.State As customer_State,
+                CustomerAddress.Zip As customer_Zip,
+                CustomerAddress.Country As customer_Country,
 
                 CustomerBillingAccount.Addr1 As billingAccount_Addr1,
                 CustomerBillingAccount.Addr2 As billingAccount_Addr2,
@@ -124,8 +137,33 @@ define(['N/query', 'N/file', './../custom_modules/bs_cm_csv_utils'],
                 }
             );
 
+            const groupsData = {
+                id: 'subscriptionId',
+
+                groupPrefixDelimiter: '_',
+                groupIds: ['subscriptionCustomerId', 'billingAccountId'],
+                groupPrefixes: ['customer', 'billingAccount'],
+            };
+
+            const groupedData = groupSQLJoinedData(resultSet.asMappedResults(), groupsData);
+            const dataSlice = [];
+
+            for (const id in groupedData) {
+                const data = groupedData[id];
+
+                dataSlice.push({
+                    'Start date': data.startdate,
+                    'End date': data.enddate,
+                    'Renewal date': data.nextrenewalstartdate,
+                    'Sales rep': data.groupedData.customer[0].customer_salesrep,
+                    'Status': data.billingsubscriptionstatus,
+                    'Admin': data.custrecord_sub_network_admin,
+                    'Network': data.custrecord_sub_network_name,
+                })
+            }
+
             const csv = convertArrayOfObjectsToCSV({
-                data: resultSet.asMappedResults()
+                data: dataSlice,
             });
 
             if (csv === null) {
@@ -139,6 +177,8 @@ define(['N/query', 'N/file', './../custom_modules/bs_cm_csv_utils'],
             });
 
             scriptContext.response.writeFile(fileObj, false);
+
+          // scriptContext.response.write(JSON.stringify(groupedData['401'].groupedData.customer[0]));
         }
 
         return {onRequest}
