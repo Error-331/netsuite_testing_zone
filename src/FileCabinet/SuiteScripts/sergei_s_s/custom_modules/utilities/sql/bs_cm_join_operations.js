@@ -2,15 +2,43 @@
  * @NApiVersion 2.1
  */
 define(['./../bs_cm_general_utils'],
-    
     ({isArray, isNullOrEmpty}) => {
+
+        function extractIdValueFromRow(dataRow, idColumnNameInData) {
+            if (isArray(idColumnNameInData)) {
+                if (idColumnNameInData.length === 1) {
+                    const value = dataRow[idColumnNameInData[0]];
+                    const valueType = typeof value;
+                    return (valueType === 'string' || valueType === 'number') ? value : value.toString()
+                }
+
+                return idColumnNameInData.reduce((idArray, id) => {
+                    if (isArray(id)) {
+                        idArray.push(extractIdValueFromRow(dataRow, id));
+                    } else {
+                        const columnValue = dataRow[id];
+                        if (!isNullOrEmpty(columnValue)) {
+                            const valueType = typeof columnValue;
+                            idArray.push((valueType === 'string' || valueType === 'number') ? columnValue : columnValue.toString());
+                        }
+                    }
+
+                    return idArray;
+                }, []).join('_');
+            } else {
+                const columnValue = dataRow[idColumnNameInData];
+                return isNullOrEmpty(columnValue) ? null : columnValue;
+            }
+        }
+
         function extractGroupIdsFromDataKeys(dataRowKeys, groupIds, groupPrefixes, groupPrefixDelimiter) {
             const groupIdsInData = [];
             let preparedDataRowKeys = dataRowKeys.map(dataRowKey => dataRowKey.toLowerCase());
 
             for (const groupId of groupIds) {
                 if (isArray(groupId)) {
-                    groupIdsInData.push(dataRowKeys, groupId, groupPrefixes, groupPrefixDelimiter);
+                    const subGroupIdsInData = extractGroupIdsFromDataKeys(dataRowKeys, groupId, groupPrefixes, groupPrefixDelimiter);
+                    groupIdsInData.push(subGroupIdsInData);
                 } else {
                     const preparedGroupId = groupId.toLowerCase();
                     let groupIdInDataIdx = preparedDataRowKeys.indexOf(preparedGroupId);
@@ -130,19 +158,11 @@ define(['./../bs_cm_general_utils'],
             const groupsDataResult = {};
 
             // find primary id raw column name
-            const preparedIdColumnName = idColumnName.toLowerCase();
-            const columnNames = Object.keys(dataRows[0]);
-            const idColumnNameIndex = columnNames.findIndex(columnKey => columnKey.toLowerCase() === preparedIdColumnName);
-
-            if (idColumnNameIndex === -1) {
-                throw new Error('Cannot find primary key ID index in data row');
-            }
-
-            const idColumnNameInData = columnNames[idColumnNameIndex];
+            const idColumnNameInData = extractGroupIdsFromDataKeys(Object.keys(dataRows[0]), [idColumnName], groupPrefixDelimiter)[0];
 
             // process data rows
             for (const dataRow of dataRows) {
-                const currentRowIdValue = dataRow[idColumnNameInData];
+                const currentRowIdValue = extractIdValueFromRow(dataRow, idColumnNameInData);
 
                 if (isNullOrEmpty(currentRowIdValue)) {
                     throw new Error(`Primary row ID (${currentRowIdValue}) cannot be empty`)
@@ -161,7 +181,7 @@ define(['./../bs_cm_general_utils'],
 
                 for (let groupPrefixIndex = 0; groupPrefixIndex < groupPrefixes.length; groupPrefixIndex++) {
                     const groupIdInData = groupIdsInData[groupPrefixIndex];
-                    const groupIdValue = dataRow[groupIdInData];
+                    const groupIdValue = extractIdValueFromRow(dataRow, groupIdInData);
 
                     const groupPrefix = groupPrefixes[groupPrefixIndex];
 
@@ -176,6 +196,7 @@ define(['./../bs_cm_general_utils'],
         }
 
         return {
+            extractIdValueFromRow,
             extractGroupIdsFromDataKeys,
             prepareGroupsMetaData,
             extractGroupedDataFromRow,
