@@ -4,17 +4,19 @@
 define([
     'N/query',
     './../../utilities/sql/bs_cm_join_operations',
+    './../../utilities/bs_cm_general_utils',
     ],
     /**
  * @param{query} query
  */
     (
         query,
-        { groupSQLJoinedData }
+        { groupSQLJoinedData },
+        { isNullOrEmpty }
     ) => {
 
-        function loadExpSubsForSalesReps() {
-            const suiteQLQuery = `
+        function loadExpSubsForSalesReps(salesRepId) {
+            let suiteQLQuery = `
               SELECT
                 Subscription.id AS subscriptionId,
                 Subscription.customer AS subscriptionCustomer,
@@ -27,11 +29,12 @@ define([
                 Subscription.custrecord_sub_network_admin,
                 Subscription.custrecord_sub_network_name,
                 
-                SubscriptionCustomer.id AS customer_subscriptionCustomerId,
-                SubscriptionCustomer.salesrep AS customer_salesrep,          
+                SubscriptionCustomer.id AS customer_subscriptionCustomerId,         
                 
                 CustomerBillingAccount.id AS billingAccount_billingAccountId,
                 CustomerBillingAccount.customer AS billingAccount_billingAccountCustomer,
+                
+                CustomerSalesRep.entityid AS customer_salesrep, 
 
                 CustomerAddress.Addr1 As customer_Addr1,
                 CustomerAddress.Addr2 As customer_Addr2,
@@ -97,6 +100,11 @@ define([
                 EntityAddress AS CustomerAddress
               ON
                 (CustomerAddress.nkey = SubscriptionCustomerAddressBookJoin.AddressBookAddress)
+                
+              LEFT OUTER JOIN
+                employee AS CustomerSalesRep
+              ON
+                (CustomerSalesRep.id = SubscriptionCustomer.salesrep)
 
               WHERE 
                 (
@@ -116,11 +124,21 @@ define([
                 )
             `;
 
+            if (!isNullOrEmpty(salesRepId)) {
+                suiteQLQuery = `${suiteQLQuery} AND CustomerSalesRep.id=${salesRepId}`;
+            }
+
             const resultSet = query.runSuiteQL(
                 {
                     query: suiteQLQuery,
                 }
             );
+
+            const mappedResults = resultSet.asMappedResults();
+
+            if (isNullOrEmpty(mappedResults)) {
+                return null;
+            }
 
             const groupsData = {
                 id: 'subscriptionId',
@@ -130,7 +148,7 @@ define([
                 groupPrefixes: ['customer', 'billingAccount'],
             };
 
-            const groupedData = groupSQLJoinedData(resultSet.asMappedResults(), groupsData);
+            const groupedData = groupSQLJoinedData(mappedResults, groupsData);
             const dataSlice = [];
 
             for (const id in groupedData) {
@@ -144,7 +162,7 @@ define([
                     'Status': data.billingsubscriptionstatus,
                     'Admin': data.custrecord_sub_network_admin,
                     'Network': data.custrecord_sub_network_name,
-                })
+                });
             }
 
             return dataSlice;
