@@ -3,19 +3,25 @@
  * @NScriptType Suitelet
  */
 define([
-        'N/query',
+        'N/ui/serverWidget',
         'N/file',
+        './../custom_modules/utilities/bs_cm_runtime_utils',
+        './../custom_modules/entities/bs_cm_sales_rep',
+        './../custom_modules/aggregations/subscription/bs_cm_expired_subscription_for_salesrep',
         './../custom_modules/bs_cm_csv_utils',
-        './../custom_modules/utilities/sql/bs_cm_join_operations',
+        './../custom_modules/utilities/bs_cm_general_utils'
     ],
     /**
  * @param{query} query
  */
     (
-        query,
+        serverWidget,
         file,
+        { getCurrentEmployeeId, getScriptCurrentURLPath },
+        { loadActiveSalesRepsNames },
+        { loadExpSubsForSalesReps },
         { convertArrayOfObjectsToCSV },
-        { groupSQLJoinedData }
+        { isNullOrEmpty }
     ) => {
         /**
          * Defines the Suitelet script trigger point.
@@ -25,160 +31,147 @@ define([
          * @since 2015.2
          */
         const onRequest = (scriptContext) => {
-            const suiteQLQuery = `
-              SELECT
-                Subscription.id AS subscriptionId,
-                Subscription.customer AS subscriptionCustomer,
-                
-                Subscription.startdate,
-                Subscription.enddate,
-                Subscription.nextrenewalstartdate,
-                Subscription.billingsubscriptionstatus,
-                
-                Subscription.custrecord_sub_network_admin,
-                Subscription.custrecord_sub_network_name,
-                
-                SubscriptionCustomer.id AS customer_subscriptionCustomerId,
-                SubscriptionCustomer.salesrep AS customer_salesrep,          
-                
-                CustomerBillingAccount.id AS billingAccount_billingAccountId,
-                CustomerBillingAccount.customer AS billingAccount_billingAccountCustomer,
+            function subscriptionsSublist(currentForm, salesRepId = null) {
+                const subscriptionsList = loadExpSubsForSalesReps(salesRepId);
 
-                CustomerAddress.Addr1 As customer_Addr1,
-                CustomerAddress.Addr2 As customer_Addr2,
-                CustomerAddress.Addr3 As customer_Addr3,
-                CustomerAddress.City As customer_City,
-                CustomerAddress.State As customer_State,
-                CustomerAddress.Zip As customer_Zip,
-                CustomerAddress.Country As customer_Country,
-
-                CustomerBillingAccount.Addr1 As billingAccount_Addr1,
-                CustomerBillingAccount.Addr2 As billingAccount_Addr2,
-                CustomerBillingAccount.Addr3 As billingAccount_Addr3,
-                CustomerBillingAccount.City As billingAccount_City,
-                CustomerBillingAccount.State As billingAccount_State,
-                CustomerBillingAccount.Zip As billingAccount_Zip,
-                CustomerBillingAccount.Country As billingAccount_Country
-              FROM
-                Subscription
-              LEFT OUTER JOIN
-                Customer AS SubscriptionCustomer
-              ON
-                (SubscriptionCustomer.id = Subscription.customer)
-                 
-              LEFT OUTER JOIN
-              (
-                SELECT
-                    *
-                FROM
-                    BillingAccount
-                AS 
-                    CustomerBillingAccount
-                INNER JOIN
-                    EntityAddressbook AS SubscriptionCustomerBillingAccountJoin
-                ON
-                    (SubscriptionCustomerBillingAccountJoin.internalid = CustomerBillingAccount.billaddresslist)
-                INNER JOIN
-                    EntityAddress AS BillingAccountAddress
-                ON
-                    (BillingAccountAddress.nkey = SubscriptionCustomerBillingAccountJoin.AddressBookAddress)
-                AND
-                    (
-                        BillingAccountAddress.Addr1 IS NOT NULL OR
-                        BillingAccountAddress.Addr2 IS NOT NULL OR
-                        BillingAccountAddress.Addr3 IS NOT NULL OR
-                        BillingAccountAddress.City IS NOT NULL OR
-                        BillingAccountAddress.State IS NOT NULL OR
-                        BillingAccountAddress.Zip IS NOT NULL OR
-                        BillingAccountAddress.Country IS NOT NULL
-                    )    
-              )
-              AS
-                CustomerBillingAccount
-              ON
-                (CustomerBillingAccount.customer = SubscriptionCustomer.id)
-              LEFT OUTER JOIN
-                EntityAddressbook AS SubscriptionCustomerAddressBookJoin
-              ON
-                (SubscriptionCustomerAddressBookJoin.Entity = SubscriptionCustomer.id)
-              AND
-                (SubscriptionCustomerAddressBookJoin.defaultbilling = 'T')
-
-              LEFT OUTER JOIN
-                EntityAddress AS CustomerAddress
-              ON
-                (CustomerAddress.nkey = SubscriptionCustomerAddressBookJoin.AddressBookAddress)
-
-              WHERE 
-                (
-                    Subscription.startdate < CURRENT_DATE 
-                    AND
-                    Subscription.enddate >= CURRENT_DATE 
-                    AND
-                    Subscription.enddate < CURRENT_DATE + 7
-                ) 
-                OR
-                (
-                    Subscription.startdate > CURRENT_DATE 
-                    AND
-                    Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                    AND
-                    (Subscription.nextrenewalstartdate - Subscription.enddate) <= 7
-                )
-
-              AND
-                
-              ROWNUM <= 50
-            `;
-
-            const resultSet = query.runSuiteQL(
-                {
-                    query: suiteQLQuery,
+                if (isNullOrEmpty(subscriptionsList)) {
+                    return;
                 }
-            );
 
-            const groupsData = {
-                id: 'subscriptionId',
+                const subscriptionsSubList = currentForm.addSublist({
+                    id: 'custpage_subscriptionslist',
+                    type: serverWidget.SublistType.LIST,
+                    title : 'Subscriptions about to expire',
+                    label : 'subscriptions'
+                });
 
-                groupPrefixDelimiter: '_',
-                groupIds: ['subscriptionCustomerId', 'billingAccountId'],
-                groupPrefixes: ['customer', 'billingAccount'],
-            };
+                const fieldNames = Object.keys(subscriptionsList[0]);
 
-            const groupedData = groupSQLJoinedData(resultSet.asMappedResults(), groupsData);
-            const dataSlice = [];
+                for (const fieldName of fieldNames) {
+                    subscriptionsSubList.addField({
+                        id: `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                        type: serverWidget.FieldType.TEXT,
+                        label: fieldName
+                    });
+                }
 
-            for (const id in groupedData) {
-                const data = groupedData[id];
+                let line = 0;
+                for (const subscription of subscriptionsList) {
+                    for (const fieldName of fieldNames) {
+                        subscriptionsSubList.setSublistValue({
+                            id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                            line : line,
+                            value : subscription[fieldName]
+                        });
+                    }
 
-                dataSlice.push({
-                    'Start date': data.startdate,
-                    'End date': data.enddate,
-                    'Renewal date': data.nextrenewalstartdate,
-                    'Sales rep': data.groupedData.customer[0].customer_salesrep,
-                    'Status': data.billingsubscriptionstatus,
-                    'Admin': data.custrecord_sub_network_admin,
-                    'Network': data.custrecord_sub_network_name,
-                })
+                    line++;
+                }
             }
 
-            const csv = convertArrayOfObjectsToCSV({
-                data: dataSlice,
-            });
+            function addSalesRepSelectBoxOptions(selectElm) {
+                const salesReps = loadActiveSalesRepsNames();
 
-            if (csv === null) {
-                return
+                selectElm.addSelectOption({
+                    value: 0,
+                    text: 'All'
+                });
+
+                for (const salesRepRow of salesReps) {
+                    selectElm.addSelectOption({
+                        value: salesRepRow.id,
+                        text: salesRepRow.entityid
+                    });
+                }
             }
 
-            const fileObj = file.create({
-                name: 'test.csv',
-                fileType: file.Type.CSV,
-                contents: csv
-            });
+            function createForm(selectBox = false) {
+                const currentForm = serverWidget.createForm({
+                    title: 'Subscriptions about to expire per sales representative'
+                });
 
-            scriptContext.response.writeFile(fileObj, false);
+                if (selectBox) {
+                    const salesRepSelect = currentForm.addField({
+                        id: 'custpage_salesrepselect',
+                        type: serverWidget.FieldType.SELECT,
+                        label: 'Sales representative'
+                    });
 
-          // scriptContext.response.write(JSON.stringify(groupedData['401'].groupedData.customer[0]));
+                    addSalesRepSelectBoxOptions(salesRepSelect);
+                }
+
+                currentForm.addField({
+                    id: 'custpage_generatecsvflag',
+                    type: serverWidget.FieldType.CHECKBOX,
+                    label: 'Generate CSV'
+                });
+
+                currentForm.addSubmitButton({
+                    label : 'Submit'
+                });
+
+                return currentForm;
+            }
+
+            const { request, response } = scriptContext;
+            const { custpage_salesrepselect, custpage_generatecsvflag } = request.parameters;
+
+            let currentEmployeeId = getCurrentEmployeeId();
+
+            if (isNullOrEmpty(currentEmployeeId)) {
+                response.write('Emplolyee id is not defined.');
+                return;
+            }
+
+            let currentForm;
+
+            //currentEmployeeId = 4203;
+
+            if ([4203, 7, 142375].includes(currentEmployeeId)) {
+                currentForm = createForm(true);
+            } else {
+                currentForm = createForm(false);
+            }
+
+            if (request.method === 'GET') {
+                response.writePage(currentForm);
+            } else if (request.method === 'POST') {
+                let selectedSalesRep;
+
+                if ([4203, 7, 142375].includes(currentEmployeeId)) {
+                    selectedSalesRep = custpage_salesrepselect === '0' ? null : custpage_salesrepselect;
+                } else {
+                    selectedSalesRep = currentEmployeeId;
+                }
+
+                if (custpage_generatecsvflag === 'F') {
+                    subscriptionsSublist(currentForm, selectedSalesRep);
+                    response.writePage(currentForm);
+                } else {
+                    const subscriptionsList = loadExpSubsForSalesReps(selectedSalesRep);
+                    const csvData = convertArrayOfObjectsToCSV({ data: subscriptionsList });
+
+                    if (csvData === null) {
+                        return
+                    }
+
+                    const filenamePrefix = 'generic_csv_file';
+                    const fileExtension = 'csv';
+                    const fileObj = file.create({
+                        name: `${filenamePrefix}_tt.${fileExtension}` ,
+                        fileType: file.Type.CSV,
+                        contents: csvData
+                    });
+
+
+
+
+                    scriptContext.response.writeFile(fileObj, false);
+                }
+
+            } else {
+                response.write('Wrong request method. Please open current suitelet using link.');
+            }
         }
 
         return {onRequest}
