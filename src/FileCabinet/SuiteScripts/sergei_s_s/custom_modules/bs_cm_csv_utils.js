@@ -1,9 +1,13 @@
 /**
  * @NApiVersion 2.1
  */
-define(['N/format', 'N/file'],
+define([
+        'N/format',
+        'N/file',
+        './utilities/bs_cm_general_utils'
+    ],
     
-    (format, file) => {
+    (format, file, { isNullOrEmpty }) => {
 
         const convertArrayOfObjectsToCSV = (args) => {
             let result, ctr, keys, columnDelimiter, lineDelimiter, data;
@@ -36,7 +40,7 @@ define(['N/format', 'N/file'],
             return result;
         }
 
-        const revrecGenerateCSV = (objArray, filename, args) => {
+        const prepareCSVFileObject = (objArray, filename, args) => {
             const csv = convertArrayOfObjectsToCSV(Object.assign({
                 data: objArray
             }, args));
@@ -46,22 +50,26 @@ define(['N/format', 'N/file'],
             }
 
             const today = format.format( { value: new Date(), type: format.Type.DATETIME } );
-            const filenamePrefix = args.filenamePrefix || 'generic_csv_file';
-            const fileExtension = args.fileExtension || 'csv';
+            const filenamePrefix = isNullOrEmpty(args.filenamePrefix) ? 'generic_csv_file' : args.filenamePrefix;
+            const fileExtension = isNullOrEmpty(args.fileExtension) ? 'csv' : args.fileExtension;
             const fileObj = file.create({
-                name: filename || `${filenamePrefix}_${today}.${fileExtension}` ,
+                name: isNullOrEmpty(filename) ? `${filenamePrefix}_${today}.${fileExtension}` : filename ,
                 fileType: file.Type.CSV,
                 contents: csv
             });
 
             fileObj.folder = args.folder || 2681900;
-            const id = fileObj.save();
+            return fileObj;
+        };
 
-            return id;
+        const revrecGenerateCSV = (objArray, filename, args) => {
+            const fileObj = prepareCSVFileObject(objArray, filename, args);
+            return fileObj.save();
         }
 
         return {
             convertArrayOfObjectsToCSV,
+            prepareCSVFileObject,
             revrecGenerateCSV,
         }
     });
