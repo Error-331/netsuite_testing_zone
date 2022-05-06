@@ -8,8 +8,9 @@ define([
         './../custom_modules/utilities/bs_cm_runtime_utils',
         './../custom_modules/entities/bs_cm_sales_rep',
         './../custom_modules/aggregations/subscription/bs_cm_expired_subscription_for_salesrep',
-        './../custom_modules/bs_cm_csv_utils',
         './../custom_modules/utilities/bs_cm_runtime_utils',
+        './../custom_modules/utilities/ui/bs_cm_ui_form_sublist',
+        './../custom_modules/bs_cm_csv_utils',
         './../custom_modules/utilities/bs_cm_general_utils'
     ],
     /**
@@ -21,8 +22,9 @@ define([
         { getCurrentEmployeeId, getScriptCurrentURLPath },
         { loadActiveSalesRepsNames },
         { loadExpSubsForSalesReps },
-        { convertArrayOfObjectsToCSV },
         { getScriptURLPathQuery },
+        { addFormSublist },
+        { prepareCSVFileObject },
         { isNullOrEmpty }
     ) => {
         /**
@@ -40,86 +42,29 @@ define([
                     return;
                 }
 
-                const subscriptionsSubList = currentForm.addSublist({
-                    id: 'custpage_subscriptionslist',
-                    type: serverWidget.SublistType.LIST,
-                    title : 'Subscriptions about to expire',
-                    label : `subscriptions (${subscriptionsList.length})`
-                });
+                 const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
 
-                const fieldNames = Object.keys(subscriptionsList[0]);
-                const fieldTypes = [
-                    serverWidget.FieldType.TEXT,
-                    serverWidget.FieldType.EMAIL,
-                    serverWidget.FieldType.TEXT,
-                    serverWidget.FieldType.DATE,
-                    serverWidget.FieldType.TEXT
-                ];
-
-                subscriptionsSubList.addField({
-                    id: `custpage_subscriptions_row_num`,
-                    type: serverWidget.FieldType.INTEGER,
-                    label: 'line number'
-                });
-
-                let line = 0;
-                for (const fieldName of fieldNames) {
-                    if (fieldName === 'startdate_infuture') {
-                        continue;
+                return addFormSublist({
+                    id: 'subscriptionslist',
+                    title: 'Subscriptions about to expire',
+                    label: 'subscriptions',
+                    showTotal: true,
+                    showLineNumber: true,
+                    fieldNames: Object.keys(subscriptionsList[0]).filter( fieldName => fieldName !== 'startdate_infuture'),
+                    fieldTypes: [
+                        serverWidget.FieldType.TEXT,
+                        serverWidget.FieldType.EMAIL,
+                        serverWidget.FieldType.TEXT,
+                        serverWidget.FieldType.DATE,
+                        serverWidget.FieldType.TEXT
+                    ],
+                    ignoreFieldNames: ['startdate_infuture'],
+                    customFieldHandlers: {
+                        'Start date': (value, dataRow) => dataRow['startdate_infuture'] === 'T' ? `<b style="color: red">${value}<b>` : value,
+                        'End date': (value, dataRow) => dataRow['startdate_infuture'] === 'F' ? `<b style="color: red">${value}<b>` : value,
+                        'Network': (value) => `<a href="${urlToNetworkManagement}">${value}</a>`,
                     }
-
-                    subscriptionsSubList.addField({
-                        id: `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
-                        type: fieldTypes[line],
-                        label: fieldName
-                    });
-
-                    line++;
-                }
-
-                line = 0;
-                const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
-                for (const subscription of subscriptionsList) {
-                    subscriptionsSubList.setSublistValue({
-                        id : `custpage_subscriptions_row_num`,
-                        line : line,
-                        value : line + 1
-                    });
-
-                    for (const fieldName of fieldNames) {
-                        if (fieldName === 'startdate_infuture') {
-                            continue;
-                        }
-
-                        if (fieldName === 'Start date' && subscription['startdate_infuture'] === 'T') {
-                            subscriptionsSubList.setSublistValue({
-                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
-                                line : line,
-                                value : `<b style="color: red">${subscription[fieldName]}<b>`
-                            });
-                        } else if (fieldName === 'End date' && subscription['startdate_infuture'] === 'F') {
-                            subscriptionsSubList.setSublistValue({
-                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
-                                line : line,
-                                value : `<b style="color: red">${subscription[fieldName]}<b>`
-                            });
-                        } else if (fieldName === 'Network') {
-                            subscriptionsSubList.setSublistValue({
-                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
-                                line : line,
-                                value : `<a href="${urlToNetworkManagement}">${subscription[fieldName]}<b>`
-                            });
-                        } else {
-                            subscriptionsSubList.setSublistValue({
-                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
-                                line : line,
-                                value : subscription[fieldName]
-                            });
-                        }
-                    }
-
-                    line++;
-                }
+                }, subscriptionsList, currentForm);
             }
 
             function addSalesRepSelectBoxOptions(selectElm) {
@@ -204,21 +149,12 @@ define([
                     response.writePage(currentForm);
                 } else {
                     const subscriptionsList = loadExpSubsForSalesReps(selectedSalesRep);
-                    const csvData = convertArrayOfObjectsToCSV({ data: subscriptionsList });
-
-                    if (csvData === null) {
-                        return
-                    }
-                    // TODO need to cleanup
-                    const filenamePrefix = 'generic_csv_file';
-                    const fileExtension = 'csv';
-                    const fileObj = file.create({
-                        name: `${filenamePrefix}_tt.${fileExtension}` ,
-                        fileType: file.Type.CSV,
-                        contents: csvData
+                    const csvFileObj = prepareCSVFileObject(subscriptionsList, null, {
+                        filenamePrefix: 'networks'
                     });
 
-                    scriptContext.response.writeFile(fileObj, false);
+                    // TODO need to cleanup
+                    scriptContext.response.writeFile(csvFileObj, false);
                 }
 
             } else {
