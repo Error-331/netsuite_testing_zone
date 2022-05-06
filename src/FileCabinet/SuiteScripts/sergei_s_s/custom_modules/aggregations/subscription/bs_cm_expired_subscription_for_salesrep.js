@@ -50,7 +50,11 @@ define([
                 CustomerBillingAccount.City As billingAccount_City,
                 CustomerBillingAccount.State As billingAccount_State,
                 CustomerBillingAccount.Zip As billingAccount_Zip,
-                CustomerBillingAccount.Country As billingAccount_Country
+                CustomerBillingAccount.Country As billingAccount_Country,
+              CASE 
+                WHEN Subscription.startdate <= CURRENT_DATE THEN 'F'
+                WHEN Subscription.startdate > CURRENT_DATE THEN 'T'
+                END AS startdate_infuture
               FROM
                 Subscription
               LEFT OUTER JOIN
@@ -155,13 +159,12 @@ define([
                 const data = groupedData[id];
 
                 dataSlice.push({
+                    'Network': data.custrecord_sub_network_name,
+                    'Admin': data.custrecord_sub_network_admin,
                     'Start date': data.startdate,
                     'End date': data.enddate,
-                    'Renewal date': data.nextrenewalstartdate,
                     'Sales rep': data.groupedData.customer[0].customer_salesrep,
-                    'Status': data.billingsubscriptionstatus,
-                    'Admin': data.custrecord_sub_network_admin,
-                    'Network': data.custrecord_sub_network_name,
+                    'startdate_infuture':data.startdate_infuture,
                 });
             }
 
