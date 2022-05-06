@@ -2,6 +2,7 @@
  * @NApiVersion 2.1
  */
 define([
+    'N/query',
     './../data/sales/bs_cm_sales_to_sales_territories',
     './../utilities/bs_cm_general_utils',
     './../utilities/bs_cm_math_utils',
@@ -10,6 +11,7 @@ define([
     ],
     
     (
+        query,
         { SALES_TO_SALES_TERRITORIES},
         { isArray , isNullOrEmpty, toSingleValue, toInt, toArray },
         { eq, between },
@@ -191,6 +193,27 @@ define([
             return null;
         }
 
+        function loadActiveSalesRepsNames() {
+            const suiteQLQuery = `
+                SELECT 
+                    id, entityid 
+                FROM 
+                    employee 
+                WHERE 
+                    issalesrep = 'T' 
+                AND 
+                    isinactive = 'F'
+            `
+
+            const resultSet = query.runSuiteQL(
+                {
+                    query: suiteQLQuery,
+                }
+            );
+
+            return resultSet.asMappedResults();
+        }
+
         return {
             checkIsListMemberRule,
             checkTerritoryRuleEquals,
@@ -199,5 +222,6 @@ define([
             checkTerritoryRule,
             checkTerritorySubRule,
             findSalesRepTerritoryBySalesRepId,
+            loadActiveSalesRepsNames,
         }
     });
