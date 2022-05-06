@@ -24,13 +24,17 @@ define([
             return id;
         }
 
+        function getScriptURLPathQuery(scriptId, deploymentId, returnExternalURL = true) {
+            return url.resolveScript({
+                scriptId,
+                deploymentId,
+                returnExternalURL,
+            });
+        }
+
         function getScriptCurrentURLPathQuery() {
             const currentScript = runtime.getCurrentScript();
-            return url.resolveScript({
-                scriptId: currentScript.id,
-                deploymentId: currentScript.deploymentId,
-                returnExternalURL: true
-            });
+            return getScriptURLPathQuery(currentScript.id, currentScript.deploymentId, true);
         }
 
         function getScriptCurrentURLPath() {
@@ -52,6 +56,7 @@ define([
         return {
             getScriptParameterByName,
             getCurrentEmployeeId,
+            getScriptURLPathQuery,
             getScriptCurrentURLPathQuery,
             getScriptCurrentURLPath,
             printCurrentScriptRemainingUsage,
