@@ -9,6 +9,7 @@ define([
         './../custom_modules/entities/bs_cm_sales_rep',
         './../custom_modules/aggregations/subscription/bs_cm_expired_subscription_for_salesrep',
         './../custom_modules/bs_cm_csv_utils',
+        './../custom_modules/utilities/bs_cm_runtime_utils',
         './../custom_modules/utilities/bs_cm_general_utils'
     ],
     /**
@@ -21,6 +22,7 @@ define([
         { loadActiveSalesRepsNames },
         { loadExpSubsForSalesReps },
         { convertArrayOfObjectsToCSV },
+        { getScriptURLPathQuery },
         { isNullOrEmpty }
     ) => {
         /**
@@ -42,27 +44,78 @@ define([
                     id: 'custpage_subscriptionslist',
                     type: serverWidget.SublistType.LIST,
                     title : 'Subscriptions about to expire',
-                    label : 'subscriptions'
+                    label : `subscriptions (${subscriptionsList.length})`
                 });
 
                 const fieldNames = Object.keys(subscriptionsList[0]);
+                const fieldTypes = [
+                    serverWidget.FieldType.TEXT,
+                    serverWidget.FieldType.EMAIL,
+                    serverWidget.FieldType.TEXT,
+                    serverWidget.FieldType.DATE,
+                    serverWidget.FieldType.TEXT
+                ];
 
-                for (const fieldName of fieldNames) {
-                    subscriptionsSubList.addField({
-                        id: `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
-                        type: serverWidget.FieldType.TEXT,
-                        label: fieldName
-                    });
-                }
+                subscriptionsSubList.addField({
+                    id: `custpage_subscriptions_row_num`,
+                    type: serverWidget.FieldType.INTEGER,
+                    label: 'line number'
+                });
 
                 let line = 0;
+                for (const fieldName of fieldNames) {
+                    if (fieldName === 'startdate_infuture') {
+                        continue;
+                    }
+
+                    subscriptionsSubList.addField({
+                        id: `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                        type: fieldTypes[line],
+                        label: fieldName
+                    });
+
+                    line++;
+                }
+
+                line = 0;
+                const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
                 for (const subscription of subscriptionsList) {
+                    subscriptionsSubList.setSublistValue({
+                        id : `custpage_subscriptions_row_num`,
+                        line : line,
+                        value : line + 1
+                    });
+
                     for (const fieldName of fieldNames) {
-                        subscriptionsSubList.setSublistValue({
-                            id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
-                            line : line,
-                            value : subscription[fieldName]
-                        });
+                        if (fieldName === 'startdate_infuture') {
+                            continue;
+                        }
+
+                        if (fieldName === 'Start date' && subscription['startdate_infuture'] === 'T') {
+                            subscriptionsSubList.setSublistValue({
+                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                                line : line,
+                                value : `<b style="color: red">${subscription[fieldName]}<b>`
+                            });
+                        } else if (fieldName === 'End date' && subscription['startdate_infuture'] === 'F') {
+                            subscriptionsSubList.setSublistValue({
+                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                                line : line,
+                                value : `<b style="color: red">${subscription[fieldName]}<b>`
+                            });
+                        } else if (fieldName === 'Network') {
+                            subscriptionsSubList.setSublistValue({
+                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                                line : line,
+                                value : `<a href="${urlToNetworkManagement}">${subscription[fieldName]}<b>`
+                            });
+                        } else {
+                            subscriptionsSubList.setSublistValue({
+                                id : `custpage_subscriptions_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                                line : line,
+                                value : subscription[fieldName]
+                            });
+                        }
                     }
 
                     line++;
@@ -87,7 +140,7 @@ define([
 
             function createForm(selectBox = false) {
                 const currentForm = serverWidget.createForm({
-                    title: 'Subscriptions about to expire per sales representative'
+                    title: 'List of networks that will expire this week'
                 });
 
                 if (selectBox) {
@@ -125,7 +178,9 @@ define([
 
             let currentForm;
 
-            //currentEmployeeId = 4203;
+            currentEmployeeId = 4203;
+
+
 
             if ([4203, 7, 142375].includes(currentEmployeeId)) {
                 currentForm = createForm(true);
@@ -154,7 +209,7 @@ define([
                     if (csvData === null) {
                         return
                     }
-
+                    // TODO need to cleanup
                     const filenamePrefix = 'generic_csv_file';
                     const fileExtension = 'csv';
                     const fileObj = file.create({
@@ -162,9 +217,6 @@ define([
                         fileType: file.Type.CSV,
                         contents: csvData
                     });
-
-
-
 
                     scriptContext.response.writeFile(fileObj, false);
                 }
