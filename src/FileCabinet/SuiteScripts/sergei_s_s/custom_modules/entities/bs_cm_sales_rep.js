@@ -214,6 +214,40 @@ define([
             return resultSet.asMappedResults();
         }
 
+        function checkIfSalesSubordinate(salesRepId) {
+            const suiteQLQuery = `
+                SELECT 
+                    SalesRep.id AS SalesRepId, 
+                    SalesRep.entityid AS SalesRepName, 
+                    SalesRepSupervisor.id AS SalesRepSupervisorId,
+                    SalesRepSupervisor.entityid AS SalesRepSupervisorName
+                FROM 
+                    Employee as SalesRep
+                INNER JOIN
+                    Employee AS SalesRepSupervisor
+                ON
+                    (SalesRep.supervisor = SalesRepSupervisor.id)
+                AND
+                    (SalesRepSupervisor.issalesrep = 'T')
+                AND
+                    (SalesRepSupervisor.isinactive = 'F')
+                WHERE 
+                    SalesRep.issalesrep = 'T' 
+                AND 
+                    SalesRep.isinactive = 'F'
+                AND
+                    SalesRep.id = ${salesRepId}
+            `;
+
+            const resultSet = query.runSuiteQL(
+                {
+                    query: suiteQLQuery,
+                }
+            );
+
+            return resultSet.asMappedResults().length > 0;
+        }
+
         return {
             checkIsListMemberRule,
             checkTerritoryRuleEquals,
@@ -223,5 +257,6 @@ define([
             checkTerritorySubRule,
             findSalesRepTerritoryBySalesRepId,
             loadActiveSalesRepsNames,
+            checkIfSalesSubordinate,
         }
     });
