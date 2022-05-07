@@ -10,6 +10,7 @@ define([
         './../custom_modules/aggregations/subscription/bs_cm_expired_subscription_for_salesrep',
         './../custom_modules/utilities/bs_cm_runtime_utils',
         './../custom_modules/utilities/ui/bs_cm_ui_form_sublist',
+        './../custom_modules/utilities/ui/bs_cm_ui_form',
         './../custom_modules/bs_cm_csv_utils',
         './../custom_modules/utilities/bs_cm_general_utils'
     ],
@@ -20,10 +21,11 @@ define([
         serverWidget,
         file,
         { getCurrentEmployeeId, getScriptCurrentURLPath },
-        { loadActiveSalesRepsNames },
+        { loadActiveSalesRepsNames, checkIfSalesSubordinate },
         { loadExpSubsForSalesReps },
         { getScriptURLPathQuery },
         { addFormSublist },
+        { addFormSelectBox },
         { prepareCSVFileObject },
         { isNullOrEmpty }
     ) => {
@@ -42,7 +44,7 @@ define([
                     return;
                 }
 
-                 const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
+                const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
 
                 return addFormSublist({
                     id: 'subscriptionslist',
@@ -67,35 +69,21 @@ define([
                 }, subscriptionsList, currentForm);
             }
 
-            function addSalesRepSelectBoxOptions(selectElm) {
-                const salesReps = loadActiveSalesRepsNames();
-
-                selectElm.addSelectOption({
-                    value: 0,
-                    text: 'All'
-                });
-
-                for (const salesRepRow of salesReps) {
-                    selectElm.addSelectOption({
-                        value: salesRepRow.id,
-                        text: salesRepRow.entityid
-                    });
-                }
-            }
-
             function createForm(selectBox = false) {
                 const currentForm = serverWidget.createForm({
                     title: 'List of networks that will expire this week'
                 });
 
                 if (selectBox) {
-                    const salesRepSelect = currentForm.addField({
-                        id: 'custpage_salesrepselect',
-                        type: serverWidget.FieldType.SELECT,
-                        label: 'Sales representative'
-                    });
-
-                    addSalesRepSelectBoxOptions(salesRepSelect);
+                    addFormSelectBox({
+                        id: 'salesrepselect',
+                        label: 'Sales representative',
+                    },
+                        [{ id: 0, entityid: 'All' }]
+                            .concat(loadActiveSalesRepsNames())
+                            .map(dataRow => ({ value: dataRow.id, text: dataRow.entityid })),
+                        currentForm
+                    );
                 }
 
                 currentForm.addField({
@@ -115,34 +103,20 @@ define([
             const { custpage_salesrepselect, custpage_generatecsvflag } = request.parameters;
 
             let currentEmployeeId = getCurrentEmployeeId();
-
+            currentEmployeeId = 4203;
             if (isNullOrEmpty(currentEmployeeId)) {
                 response.write('Emplolyee id is not defined.');
                 return;
             }
 
-            let currentForm;
-
-            currentEmployeeId = 4203;
-
-
-
-            if ([4203, 7, 142375].includes(currentEmployeeId)) {
-                currentForm = createForm(true);
-            } else {
-                currentForm = createForm(false);
-            }
+            const isSalesSubordinate = checkIfSalesSubordinate(currentEmployeeId);
+            const currentForm = createForm(!isSalesSubordinate);
 
             if (request.method === 'GET') {
                 response.writePage(currentForm);
             } else if (request.method === 'POST') {
-                let selectedSalesRep;
-
-                if ([4203, 7, 142375].includes(currentEmployeeId)) {
-                    selectedSalesRep = custpage_salesrepselect === '0' ? null : custpage_salesrepselect;
-                } else {
-                    selectedSalesRep = currentEmployeeId;
-                }
+                let selectedSalesRep = custpage_salesrepselect === '0' ? null : custpage_salesrepselect;
+                selectedSalesRep = isSalesSubordinate ? currentEmployeeId : selectedSalesRep;
 
                 if (custpage_generatecsvflag === 'F') {
                     subscriptionsSublist(currentForm, selectedSalesRep);
