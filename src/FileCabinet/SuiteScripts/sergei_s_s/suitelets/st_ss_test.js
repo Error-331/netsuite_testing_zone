@@ -12,7 +12,9 @@ define([
         './../custom_modules/utilities/ui/bs_cm_ui_form_sublist',
         './../custom_modules/utilities/ui/bs_cm_ui_form',
         './../custom_modules/bs_cm_csv_utils',
-        './../custom_modules/utilities/bs_cm_general_utils'
+        './../custom_modules/utilities/bs_cm suite_billing_settings_utils',
+        './../custom_modules/utilities/bs_cm_array_utils',
+        './../custom_modules/utilities/bs_cm_general_utils',
     ],
     /**
  * @param{query} query
@@ -27,7 +29,9 @@ define([
         { addFormSublist },
         { addFormSelectBox },
         { prepareCSVFileObject },
-        { isNullOrEmpty }
+        { getNetworkTypeStrByTypeId },
+        { removeFieldsFromObjectsArray },
+        { isNullOrEmpty },
     ) => {
         /**
          * Defines the Suitelet script trigger point.
@@ -37,54 +41,73 @@ define([
          * @since 2015.2
          */
         const onRequest = (scriptContext) => {
-            function subscriptionsSublist(currentForm, salesRepId = null) {
-                const subscriptionsList = loadExpSubsForSalesReps(salesRepId);
+            const FIELDS_TO_IGNORE = ['startdate_infuture', 'network_type', 'network_id'];
+            const SUBLIST_ID = 'subscriptionslist';
 
-                if (isNullOrEmpty(subscriptionsList)) {
-                    return;
+            function determineSelSalesRepId(currentEmployeeId, isSalesSubordinate, selSalesRepIdList, selSalesRepIdReq) {
+                if (isNullOrEmpty(currentEmployeeId)) {
+                    throw new Error('Employee id is not defined');
                 }
 
-                const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
+                let selectedSalesRep;
+                if (!isNullOrEmpty(selSalesRepIdList)) {
+                    selectedSalesRep = selSalesRepIdList;
+                } else if (!isNullOrEmpty(selSalesRepIdReq)) {
+                    selectedSalesRep = selSalesRepIdReq;
+                } else {
+                    return null;
+                }
+
+                return isSalesSubordinate ? currentEmployeeId : selectedSalesRep;
+            }
+
+            function createSubscriptionsSublist(currentForm, subscriptionsList = []) {
+                const urlToNetworkManagement = getScriptURLPathQuery('customscript_sbss1_bsnc_sl_network_page', 'customdeploy_sbss1_bsnc_sl_network_page');
 
                 return addFormSublist({
-                    id: 'subscriptionslist',
+                    id: SUBLIST_ID,
                     title: 'Subscriptions about to expire',
                     label: 'subscriptions',
                     showTotal: true,
                     showLineNumber: true,
-                    fieldNames: Object.keys(subscriptionsList[0]).filter( fieldName => fieldName !== 'startdate_infuture'),
+                    fieldNames: Object.keys(subscriptionsList[0]),
                     fieldTypes: [
                         serverWidget.FieldType.TEXT,
                         serverWidget.FieldType.EMAIL,
-                        serverWidget.FieldType.TEXT,
+                        serverWidget.FieldType.DATE,
                         serverWidget.FieldType.DATE,
                         serverWidget.FieldType.TEXT
                     ],
-                    ignoreFieldNames: ['startdate_infuture'],
+                    ignoreFieldNames: FIELDS_TO_IGNORE,
                     customFieldHandlers: {
-                        'Start date': (value, dataRow) => dataRow['startdate_infuture'] === 'T' ? `<b style="color: red">${value}<b>` : value,
+                     //   'Start date': (value, dataRow) => dataRow['startdate_infuture'] === 'T' ? `<b style="color: red">${value}<b>` : value,
                         'End date': (value, dataRow) => dataRow['startdate_infuture'] === 'F' ? `<b style="color: red">${value}<b>` : value,
-                        'Network': (value) => `<a href="${urlToNetworkManagement}">${value}</a>`,
-                    }
+                        'Network': (value, dataRow) => {
+                            const networkId = dataRow['network_id'];
+                            const networkType = getNetworkTypeStrByTypeId(dataRow['network_type']);
+                            const networkName = dataRow['Network'];
+
+                            return `<a href="${urlToNetworkManagement}&bsnc_network=${networkId}&bsnc_type=${networkType}&bsnc_network_name=${networkName}">${value}</a>`;
+                        },
+                    },
                 }, subscriptionsList, currentForm);
             }
 
-            function createForm(selectBox = false) {
+            function createForm(isSalesSubordinate = false) {
                 const currentForm = serverWidget.createForm({
                     title: 'List of networks that will expire this week'
                 });
 
-                if (selectBox) {
-                    addFormSelectBox({
+                addFormSelectBox({
                         id: 'salesrepselect',
                         label: 'Sales representative',
+                        disabled: isSalesSubordinate
                     },
-                        [{ id: 0, entityid: 'All' }]
-                            .concat(loadActiveSalesRepsNames())
-                            .map(dataRow => ({ value: dataRow.id, text: dataRow.entityid })),
-                        currentForm
-                    );
-                }
+                    [{ id: 0, entityid: 'All' }]
+                        .concat(loadActiveSalesRepsNames())
+                        .map(dataRow => ({ value: dataRow.id, text: dataRow.entityid })),
+                    currentForm
+                );
 
                 currentForm.addField({
                     id: 'custpage_generatecsvflag',
@@ -99,41 +122,99 @@ define([
                 return currentForm;
             }
 
-            const { request, response } = scriptContext;
-            const { custpage_salesrepselect, custpage_generatecsvflag } = request.parameters;
-
-            let currentEmployeeId = getCurrentEmployeeId();
-            currentEmployeeId = 4203;
-            if (isNullOrEmpty(currentEmployeeId)) {
-                response.write('Emplolyee id is not defined.');
-                return;
+            function composeStyleForSublistRow(cellStyle, sublistId, rowNum, columnNam) {
+                return `
+                    table#custpage_${sublistId}_splits tr:nth-child(${rowNum}) td:nth-child(${columnNam}).uir-list-row-cell {
+                        ${cellStyle}
+                    }
+                `;
             }
 
-            const isSalesSubordinate = checkIfSalesSubordinate(currentEmployeeId);
-            const currentForm = createForm(!isSalesSubordinate);
+            function addCustomStyling(currentForm, subscriptionsList) {
+                let line = 2;
 
-            if (request.method === 'GET') {
-                response.writePage(currentForm);
-            } else if (request.method === 'POST') {
-                let selectedSalesRep = custpage_salesrepselect === '0' ? null : custpage_salesrepselect;
-                selectedSalesRep = isSalesSubordinate ? currentEmployeeId : selectedSalesRep;
+                const cellStyle = `
+                    color: red !important;
+                    font-weight: bold;
+                `;
 
-                if (custpage_generatecsvflag === 'F') {
-                    subscriptionsSublist(currentForm, selectedSalesRep);
-                    response.writePage(currentForm);
-                } else {
-                    const subscriptionsList = loadExpSubsForSalesReps(selectedSalesRep);
-                    const csvFileObj = prepareCSVFileObject(subscriptionsList, null, {
-                        filenamePrefix: 'networks'
-                    });
+                let styleContents = '<style>';
+                for(const dataRow of subscriptionsList) {
+                    if (dataRow['startdate_infuture'] === 'T') {
+                        styleContents += composeStyleForSublistRow(cellStyle, SUBLIST_ID, line, 4);
+                    } else {
+                        styleContents += composeStyleForSublistRow(cellStyle, SUBLIST_ID, line, 5);
+                    }
 
-                    // TODO need to cleanup
-                    scriptContext.response.writeFile(csvFileObj, false);
+                    line++;
                 }
 
-            } else {
-                response.write('Wrong request method. Please open current suitelet using link.');
+                styleContents += '</style>';
+
+                currentForm.addField({
+                    id: 'custpage_header',
+                    type: serverWidget.FieldType.INLINEHTML,
+                    label: ' '
+                }).defaultValue = styleContents;
             }
+
+            function writePage(response, isSalesSubordinate, selectedSalesRepId) {
+                const currentForm = createForm(isSalesSubordinate);
+
+                if (isNullOrEmpty(selectedSalesRepId)) {
+                    response.writePage(currentForm);
+                    return;
+                }
+
+                const subscriptionsList = loadExpSubsForSalesReps(selectedSalesRepId === '0' ? null : selectedSalesRepId);
+
+                if (isNullOrEmpty(subscriptionsList)) {
+                    response.writePage(currentForm);
+                    return;
+                }
+
+                addCustomStyling(currentForm, subscriptionsList);
+                createSubscriptionsSublist(currentForm, subscriptionsList);
+
+                response.writePage(currentForm);
+            }
+
+            function writeCSV(response, selectedSalesRepId) {
+                const subscriptionsList = loadExpSubsForSalesReps(selectedSalesRepId === '0' ? null : selectedSalesRepId);
+                removeFieldsFromObjectsArray(subscriptionsList, FIELDS_TO_IGNORE);
+
+                const csvFileObj = prepareCSVFileObject(subscriptionsList, null, {
+                    filenamePrefix: 'networks'
+                });
+
+                response.writeFile(csvFileObj, false);
+            }
+
+            function render() {
+                const { request, response } = scriptContext;
+                const { custpage_salesrepselect, custpage_generatecsvflag, salesrepidreq } = request.parameters;
+
+                let currentEmployeeId = getCurrentEmployeeId();
+                currentEmployeeId = 4203;
+
+                const isSalesSubordinate = checkIfSalesSubordinate(currentEmployeeId);
+                const selectedSalesRepId = determineSelSalesRepId(currentEmployeeId, isSalesSubordinate, custpage_salesrepselect, salesrepidreq);
+
+                if (request.method === 'GET') {
+                    writePage(response, isSalesSubordinate, selectedSalesRepId);
+                } else if (request.method === 'POST') {
+                    if (custpage_generatecsvflag === 'F') {
+                        writePage(response, isSalesSubordinate, selectedSalesRepId);
+                    } else {
+                        writeCSV(response, selectedSalesRepId);
+                    }
+                } else {
+                    response.write('Wrong request method. Please open current suitelet using link.');
+                }
+            }
+
+            // main
+            render();
         }
 
         return {onRequest}

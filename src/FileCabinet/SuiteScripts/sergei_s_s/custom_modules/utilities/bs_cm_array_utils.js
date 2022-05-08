@@ -14,7 +14,18 @@ define([],
             return -1;
         }
 
+        function removeFieldsFromObjectsArray(objectsArray, fieldsToRemove = []) {
+            for (const arrayRow of objectsArray) {
+                for (const fieldToRemove of fieldsToRemove) {
+                    delete arrayRow[fieldToRemove];
+                }
+            }
+
+            return objectsArray;
+        }
+
         return {
-            findIdxInObjectsArrayByKeyValue
+            findIdxInObjectsArrayByKeyValue,
+            removeFieldsFromObjectsArray,
         }
     });

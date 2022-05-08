@@ -25,12 +25,19 @@ define([
             let {
                 id,
                 label = '',
+                disabled = false,
             } = options;
 
             id = `custpage_${id}`;
 
             // add selectbox itself
             const $selectBox = $form.addField({ id, label, type: serverWidget.FieldType.SELECT });
+
+            if (disabled) {
+                $selectBox.updateDisplayType({
+                    displayType: serverWidget.FieldDisplayType.DISABLED
+                });
+            }
 
             for (const dataRow of data) {
                 $selectBox.addSelectOption(dataRow);

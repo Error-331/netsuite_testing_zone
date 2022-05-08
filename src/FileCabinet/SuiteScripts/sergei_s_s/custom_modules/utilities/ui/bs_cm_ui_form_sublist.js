@@ -60,6 +60,10 @@ define([
 
             // add sublist fields
             for (const fieldName of fieldNames) {
+                if (ignoreFieldNames.includes(fieldName)) {
+                    continue;
+                }
+
                 $sublist.addField({
                     id: `custpage_${id}_${fieldName.toLowerCase().replace(/ /g, '_')}`,
                     type: fieldTypes[line],

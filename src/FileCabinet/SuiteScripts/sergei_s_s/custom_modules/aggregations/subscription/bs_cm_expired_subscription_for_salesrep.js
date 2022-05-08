@@ -28,6 +28,8 @@ define([
                 
                 Subscription.custrecord_sub_network_admin,
                 Subscription.custrecord_sub_network_name,
+                Subscription.custrecord_sub_network_id,
+                Subscription.custrecord_bsn_type,
                 
                 SubscriptionCustomer.id AS customer_subscriptionCustomerId,         
                 
@@ -160,11 +162,13 @@ define([
 
                 dataSlice.push({
                     'Network': data.custrecord_sub_network_name,
-                    'Admin': data.custrecord_sub_network_admin,
+                    'Network admin': data.custrecord_sub_network_admin,
                     'Start date': data.startdate,
                     'End date': data.enddate,
                     'Sales rep': data.groupedData.customer[0].customer_salesrep,
-                    'startdate_infuture':data.startdate_infuture,
+                    'network_type': data.custrecord_bsn_type,
+                    'network_id': data.custrecord_sub_network_id,
+                    'startdate_infuture': data.startdate_infuture,
                 });
             }
 

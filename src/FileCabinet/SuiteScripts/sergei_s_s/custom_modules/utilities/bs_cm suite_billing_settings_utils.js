@@ -4,7 +4,7 @@
 define(['./../bs_cm_environment_utils', './bs_cm_general_utils'],
     (
         { prepareCustomEnvironmentSettingsSearch },
-        { oneTimeMemoizer }
+        { oneTimeMemoizer, toInt }
     ) => {
         // constants
         const priceLevelMSRP = '0';
@@ -268,6 +268,21 @@ define(['./../bs_cm_environment_utils', './bs_cm_general_utils'],
             return { host, user, pass, endp, soap, actn };
         };
 
+        const getNetworkTypeStrByTypeId = (networkTypeId) => {
+            networkTypeId = toInt(networkTypeId);
+
+            switch (networkTypeId) {
+                case netTypeCloud:
+                    return 'cloud';
+                case netTypeCom:
+                    return 'com';
+                case netTypeBSNEE:
+                    return 'bsnee';
+                default:
+                    return null;
+            }
+        };
+
         return {
             priceLevelMSRP,
             priceLevel25,
@@ -289,6 +304,8 @@ define(['./../bs_cm_environment_utils', './bs_cm_general_utils'],
             initSuiteBillingBSNSettings: oneTimeMemoizer(initSuiteBillingBSNSettings),
 
             getCredsBSNC: oneTimeMemoizer(getCredsBSNC),
+
+            getNetworkTypeStrByTypeId,
         }
 
     });
