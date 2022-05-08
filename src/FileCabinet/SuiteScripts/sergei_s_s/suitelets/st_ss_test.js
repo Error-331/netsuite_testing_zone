@@ -80,8 +80,6 @@ define([
                     ],
                     ignoreFieldNames: FIELDS_TO_IGNORE,
                     customFieldHandlers: {
-                     //   'Start date': (value, dataRow) => dataRow['startdate_infuture'] === 'T' ? `<b style="color: red">${value}<b>` : value,
-                        'End date': (value, dataRow) => dataRow['startdate_infuture'] === 'F' ? `<b style="color: red">${value}<b>` : value,
                         'Network': (value, dataRow) => {
                             const networkId = dataRow['network_id'];
                             const networkType = getNetworkTypeStrByTypeId(dataRow['network_type']);
@@ -101,7 +99,7 @@ define([
                 addFormSelectBox({
                         id: 'salesrepselect',
                         label: 'Sales representative',
-                        disabled: isSalesSubordinate
+                        disabled: isSalesSubordinate,
                     },
                     [{ id: 0, entityid: 'All' }]
                         .concat(loadActiveSalesRepsNames())
@@ -112,7 +110,7 @@ define([
                 currentForm.addField({
                     id: 'custpage_generatecsvflag',
                     type: serverWidget.FieldType.CHECKBOX,
-                    label: 'Generate CSV'
+                    label: 'Generate CSV',
                 });
 
                 currentForm.addSubmitButton({
@@ -151,11 +149,17 @@ define([
 
                 styleContents += '</style>';
 
-                currentForm.addField({
+                const $inlineHTML = currentForm.addField({
                     id: 'custpage_header',
                     type: serverWidget.FieldType.INLINEHTML,
                     label: ' '
-                }).defaultValue = styleContents;
+                });
+
+                $inlineHTML.defaultValue = styleContents;
+
+                $inlineHTML.updateLayoutType({
+                    layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
+                });
             }
 
             function writePage(response, isSalesSubordinate, selectedSalesRepId) {

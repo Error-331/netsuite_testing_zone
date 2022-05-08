@@ -42,6 +42,8 @@ define([
             for (const dataRow of data) {
                 $selectBox.addSelectOption(dataRow);
             }
+
+            return $selectBox;
         }
 
         return { addFormSelectBox }

@@ -195,6 +195,10 @@ define(['./../bs_cm_general_utils'],
             return groupsDataResult;
         }
 
+        function groupSQLJoinedDataAsArray(dataRows, groupsData) {
+
+        }
+
         return {
             extractIdValueFromRow,
             extractGroupIdsFromDataKeys,
@@ -202,5 +206,6 @@ define(['./../bs_cm_general_utils'],
             extractGroupedDataFromRow,
 
             groupSQLJoinedData,
+            groupSQLJoinedDataAsArray,
         }
     });

@@ -32,7 +32,8 @@ define([
                 fieldNames,
                 fieldTypes,
                 ignoreFieldNames = [],
-                customFieldHandlers = {}
+                customFieldHandlers = {},
+                container,
             } = options;
 
             id = `custpage_${id}`;
@@ -44,6 +45,7 @@ define([
                 type: serverWidget.SublistType.LIST,
                 title,
                 label,
+                container,
             });
 
             // add 'line number' column if needed
@@ -67,7 +69,7 @@ define([
                 $sublist.addField({
                     id: `custpage_${id}_${fieldName.toLowerCase().replace(/ /g, '_')}`,
                     type: fieldTypes[line],
-                    label: fieldName
+                    label: fieldName,
                 });
 
                 line++;
