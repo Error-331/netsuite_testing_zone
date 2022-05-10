@@ -17,7 +17,7 @@ define([
 
         function loadExpSubsForSalesReps(salesRepId) {
             let suiteQLQuery = `
-              SELECT
+              SELECT DISTINCT
                 Subscription.id AS subscriptionId,
                 Subscription.customer AS subscriptionCustomer,
                 
@@ -56,7 +56,12 @@ define([
               CASE 
                 WHEN Subscription.startdate <= CURRENT_DATE THEN 'F'
                 WHEN Subscription.startdate > CURRENT_DATE THEN 'T'
-                END AS startdate_infuture
+                END AS startdate_infuture,
+                
+              CASE
+                WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
+                WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
+                END AS expdate
               FROM
                 Subscription
               LEFT OUTER JOIN
@@ -112,23 +117,28 @@ define([
               ON
                 (CustomerSalesRep.id = SubscriptionCustomer.salesrep)
 
-              WHERE 
+              WHERE
                 (
-                    Subscription.startdate < CURRENT_DATE 
-                    AND
-                    Subscription.enddate >= CURRENT_DATE 
-                    AND
-                    Subscription.enddate < CURRENT_DATE + 7
-                ) 
-                OR
-                (
-                    Subscription.startdate > CURRENT_DATE 
-                    AND
-                    Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                    AND
-                    (Subscription.nextrenewalstartdate - Subscription.enddate) <= 7
+                        (
+                        Subscription.startdate < CURRENT_DATE 
+                        AND
+                        Subscription.enddate >= CURRENT_DATE 
+                        AND
+                        Subscription.enddate < CURRENT_DATE + 121
+                        ) 
+                    OR
+                        (
+                        Subscription.startdate >= CURRENT_DATE 
+                        AND
+                        Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                        AND
+                        Subscription.startdate < CURRENT_DATE + 7
+                        )
                 )
-            `;
+              AND
+                CustomerSalesRep.entityid IS NOT NULL
+             
+            `; // 121
 
             if (!isNullOrEmpty(salesRepId)) {
                 suiteQLQuery = `${suiteQLQuery} AND CustomerSalesRep.id=${salesRepId}`;
@@ -165,6 +175,7 @@ define([
                     'Network admin': data.custrecord_sub_network_admin,
                     'Start date': data.startdate,
                     'End date': data.enddate,
+                    'Expiration date': data.expdate,
                     'Sales rep': data.groupedData.customer[0].customer_salesrep,
                     'network_type': data.custrecord_bsn_type,
                     'network_id': data.custrecord_sub_network_id,
