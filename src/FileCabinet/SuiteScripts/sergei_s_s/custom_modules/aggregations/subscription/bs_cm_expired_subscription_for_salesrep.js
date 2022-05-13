@@ -11,7 +11,7 @@ define([
  */
     (
         query,
-        { groupSQLJoinedData },
+        { groupSQLJoinedDataNotSorted },
         { isNullOrEmpty }
     ) => {
 
@@ -145,11 +145,14 @@ define([
                 )
               AND
                 CustomerSalesRep.entityid IS NOT NULL
-             
-            `; // 121
+              AND
+                Subscription.custrecord_sub_network_name IS NOT NULL
+            `;
 
             if (!isNullOrEmpty(salesRepId)) {
-                suiteQLQuery = `${suiteQLQuery} AND CustomerSalesRep.id=${salesRepId}`;
+                suiteQLQuery = `${suiteQLQuery} AND CustomerSalesRep.id=${salesRepId} ORDER BY expdate ASC`;
+            } else {
+                suiteQLQuery = `${suiteQLQuery} ORDER BY expdate ASC`;
             }
 
             const resultSet = query.runSuiteQL(
@@ -172,13 +175,14 @@ define([
                 groupPrefixes: ['customer', 'billingAccount'],
             };
 
-            const groupedData = groupSQLJoinedData(mappedResults, groupsData);
-            const dataSlice = [];
+            const groupedData = groupSQLJoinedDataNotSorted(mappedResults, groupsData);
+            const dataSlice = new Array(Object.keys(groupedData).length);
 
             for (const id in groupedData) {
                 const data = groupedData[id];
+                const orderId = groupedData[id].orderId;
 
-                dataSlice.push({
+                dataSlice[orderId] = {
                     'Network': data.custrecord_sub_network_name,
                     'Network admin': data.custrecord_sub_network_admin,
                     'Start date': data.startdate,
@@ -189,7 +193,7 @@ define([
                     'network_type': data.custrecord_bsn_type,
                     'network_id': data.custrecord_sub_network_id,
                     'startdate_infuture': data.startdate_infuture,
-                });
+                };
             }
 
             return dataSlice;

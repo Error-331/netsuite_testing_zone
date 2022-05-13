@@ -134,7 +134,7 @@ define(['./../bs_cm_general_utils'],
             };
         }
 
-        function groupSQLJoinedData(dataRows, groupsData) {
+        function groupSQLJoinedDataNotSorted(dataRows, groupsData) {
             // check input data
             if (isNullOrEmpty(dataRows)) {
                 throw new Error('Data cannot be NULL or empty');
@@ -156,6 +156,7 @@ define(['./../bs_cm_general_utils'],
 
             // prepare temporary variables
             const groupsDataResult = {};
+            let orderId = 0;
 
             // find primary id raw column name
             const idColumnNameInData = extractGroupIdsFromDataKeys(Object.keys(dataRows[0]), [idColumnName], groupPrefixDelimiter)[0];
@@ -175,8 +176,12 @@ define(['./../bs_cm_general_utils'],
                 if (isNullOrEmpty(groupsDataResult[currentRowIdValue])) {
                     groupsDataResult[currentRowIdValue] = Object.assign({}, noneGroupedData);
 
+
+                    groupsDataResult[currentRowIdValue].orderId = orderId;
                     groupsDataResult[currentRowIdValue].groupsIdValues = groupPrefixes.reduce((groupsIdValues, groupName) => { groupsIdValues[groupName] = []; return groupsIdValues }, {});
                     groupsDataResult[currentRowIdValue].groupedData = groupPrefixes.reduce((groupsDataAccumulator, groupName) => { groupsDataAccumulator[groupName] = []; return groupsDataAccumulator }, {});
+
+                    orderId++;
                 }
 
                 for (let groupPrefixIndex = 0; groupPrefixIndex < groupPrefixes.length; groupPrefixIndex++) {
@@ -205,7 +210,7 @@ define(['./../bs_cm_general_utils'],
             prepareGroupsMetaData,
             extractGroupedDataFromRow,
 
-            groupSQLJoinedData,
+            groupSQLJoinedDataNotSorted,
             groupSQLJoinedDataAsArray,
         }
     });
