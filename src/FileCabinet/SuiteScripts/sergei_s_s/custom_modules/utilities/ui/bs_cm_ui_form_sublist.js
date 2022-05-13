@@ -53,7 +53,7 @@ define([
                 $sublist.addField({
                     id: `custpage_${id}_line_num`,
                     type: serverWidget.FieldType.INTEGER,
-                    label: 'line number'
+                    label: '#'
                 });
             }
 
@@ -111,5 +111,48 @@ define([
             return $sublist;
         }
 
-        return { addFormSublist }
+        function composeStyleForSublistRowColumn(cellStyle, sublistId, rowNum, columnNum) {
+            return `
+                    table#custpage_${sublistId}_splits tr:nth-child(${rowNum}) td:nth-child(${columnNum}).uir-list-row-cell {
+                        ${cellStyle}
+                    }
+                `;
+        }
+
+        function addStyleToSpecificSublistColumns(options, $form, style = '', rowColumnIds = []) {
+            const { sublistId, startRowNum, column } = options;
+
+            // compose css rule
+            const cssRule = composeStyleForSublistRowColumn(style, sublistId, `n+${startRowNum}`, column);
+
+            // insert hidden HTML field with styles
+            const $inlineHTML = $form.addField({
+                id: `custpage_sublist_${sublistId}_custom_styles`,
+                type: serverWidget.FieldType.INLINEHTML,
+                label: ' '
+            });
+
+            $inlineHTML.defaultValue = `<style>${cssRule}</style>`;
+
+            $inlineHTML.updateLayoutType({
+                layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
+            });
+        }
+
+        function markSublistRowsInBoldRed(options, $form, rowColumnIds = []) {
+            const cellStyle = `
+                    color: red !important;
+                    font-weight: bold;
+                `;
+
+            addStyleToSpecificSublistColumns(options, $form, cellStyle, rowColumnIds)
+        }
+
+        return {
+            addFormSublist,
+
+            composeStyleForSublistRowColumn,
+            addStyleToSpecificSublistColumns,
+            markSublistRowsInBoldRed,
+        }
     });

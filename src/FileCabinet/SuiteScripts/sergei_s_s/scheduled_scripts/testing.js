@@ -38,7 +38,26 @@ require([
 
 
             let suiteQLQuery = `
-              SELECT
+
+
+
+           `;
+
+
+            //   AND ROWNUM <= 50 // 143898
+
+            // 142375
+            // 123923
+
+           /* suiteQLQuery = `
+          
+SELECT EXTRACT( DAY FROM (CURRENT_DATE + 6) ) AS DateDiff from dual
+              SELECT (CURRENT_DATE + 121) - CURRENT_DATE  AS DateDiff from dual
+            `;*/
+
+            suiteQLQuery = `
+          
+              SELECT DISTINCT
                 Subscription.id AS subscriptionId,
                 Subscription.customer AS subscriptionCustomer,
                 
@@ -49,6 +68,8 @@ require([
                 
                 Subscription.custrecord_sub_network_admin,
                 Subscription.custrecord_sub_network_name,
+                Subscription.custrecord_sub_network_id,
+                Subscription.custrecord_bsn_type,
                 
                 SubscriptionCustomer.id AS customer_subscriptionCustomerId,         
                 
@@ -75,7 +96,18 @@ require([
               CASE 
                 WHEN Subscription.startdate <= CURRENT_DATE THEN 'F'
                 WHEN Subscription.startdate > CURRENT_DATE THEN 'T'
-                END AS startdate_infuture
+                END AS startdate_infuture,
+                
+              CASE
+                WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
+                WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
+                END AS expdate,
+                
+              CASE
+                WHEN Subscription.startdate < CURRENT_DATE THEN CEIL((Subscription.enddate - CURRENT_DATE))
+                WHEN Subscription.startdate >= CURRENT_DATE THEN CEIL((Subscription.startdate - (Subscription.startdate - 1)))
+              END AS daystillexpdate
+              
               FROM
                 Subscription
               LEFT OUTER JOIN
@@ -131,70 +163,32 @@ require([
               ON
                 (CustomerSalesRep.id = SubscriptionCustomer.salesrep)
 
-              WHERE 
+              WHERE
                 (
-                    Subscription.startdate < CURRENT_DATE 
-                    AND
-                    Subscription.enddate >= CURRENT_DATE 
-                    AND
-                    Subscription.enddate < CURRENT_DATE + 7
-                ) 
-                OR
-                (
-                    Subscription.startdate > CURRENT_DATE 
-                    AND
-                    Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                    AND
-                    (Subscription.nextrenewalstartdate - Subscription.enddate) <= 7
+                        (
+                        Subscription.startdate < CURRENT_DATE 
+                        AND
+                        Subscription.enddate >= CURRENT_DATE 
+                        AND
+                        Subscription.billingsubscriptionstatus != 'TERMINATED'
+                        AND
+                        Subscription.enddate < CURRENT_DATE + 7
+                        ) 
+                    OR
+                        (
+                        Subscription.startdate >= CURRENT_DATE 
+                        AND
+                        Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                        AND
+                        Subscription.startdate < CURRENT_DATE + 7
+                        )
                 )
+              AND
+                CustomerSalesRep.entityid IS NOT NULL
+              
             `;
 
-           /* suiteQLQuery = `
-                SELECT
-                billingsubscriptionstatus,
-                startdate,
-                enddate,
-                nextrenewalstartdate
-                FROM Subscription WHERE
-                (startdate < CURRENT_DATE AND
-                enddate >= CURRENT_DATE AND
-                enddate < CURRENT_DATE + 7)
-                OR
-                (
-                startdate > CURRENT_DATE AND
-                billingsubscriptionstatus = 'PENDING_ACTIVATION' AND
-                (nextrenewalstartdate - enddate) <= 7
-                )
 
-            `;*/
-            //   AND ROWNUM <= 50 // 143898
-
-            // 142375
-            // 123923
-
-            suiteQLQuery = `
-                SELECT 
-                    SalesRep.id AS SalesRepId, 
-                    SalesRep.entityid AS SalesRepName, 
-                    SalesRepSupervisor.id AS SalesRepSupervisorId,
-                    SalesRepSupervisor.entityid AS SalesRepSupervisorName
-                FROM 
-                    Employee as SalesRep
-                INNER JOIN
-                    Employee AS SalesRepSupervisor
-                ON
-                    (SalesRep.supervisor = SalesRepSupervisor.id)
-                AND
-                    (SalesRepSupervisor.issalesrep = 'T')
-                AND
-                    (SalesRepSupervisor.isinactive = 'F')
-                WHERE 
-                    SalesRep.issalesrep = 'T' 
-                AND 
-                    SalesRep.isinactive = 'F'
-
-                
-            `
 
            // getCurrentEmployeeId();
            // return;

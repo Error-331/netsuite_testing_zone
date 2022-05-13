@@ -26,6 +26,7 @@ define([
                 id,
                 label = '',
                 disabled = false,
+                defaultValue,
             } = options;
 
             id = `custpage_${id}`;
@@ -36,6 +37,12 @@ define([
             if (disabled) {
                 $selectBox.updateDisplayType({
                     displayType: serverWidget.FieldDisplayType.DISABLED
+                });
+            }
+
+            if (!isNullOrEmpty(defaultValue)) {
+                $form.updateDefaultValues({
+                    [id]: defaultValue,
                 });
             }
 

@@ -15,7 +15,7 @@ define([
         { isNullOrEmpty }
     ) => {
 
-        function loadExpSubsForSalesReps(salesRepId) {
+        function loadExpSubsForSalesReps(salesRepId, periodDays = 7) {
             let suiteQLQuery = `
               SELECT DISTINCT
                 Subscription.id AS subscriptionId,
@@ -61,7 +61,13 @@ define([
               CASE
                 WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
                 WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
-                END AS expdate
+                END AS expdate,
+                
+              CASE
+                WHEN Subscription.startdate < CURRENT_DATE THEN CEIL((Subscription.enddate - CURRENT_DATE))
+                WHEN Subscription.startdate >= CURRENT_DATE THEN CEIL(((Subscription.startdate - 1) - CURRENT_DATE))
+              END AS daystillexpdate
+              
               FROM
                 Subscription
               LEFT OUTER JOIN
@@ -124,7 +130,9 @@ define([
                         AND
                         Subscription.enddate >= CURRENT_DATE 
                         AND
-                        Subscription.enddate < CURRENT_DATE + 121
+                        Subscription.billingsubscriptionstatus != 'TERMINATED'
+                        AND
+                        Subscription.enddate < CURRENT_DATE + ${periodDays}
                         ) 
                     OR
                         (
@@ -132,7 +140,7 @@ define([
                         AND
                         Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
                         AND
-                        Subscription.startdate < CURRENT_DATE + 7
+                        Subscription.startdate < CURRENT_DATE + ${periodDays}
                         )
                 )
               AND
@@ -176,6 +184,7 @@ define([
                     'Start date': data.startdate,
                     'End date': data.enddate,
                     'Expiration date': data.expdate,
+                    'Days till expiration': data.daystillexpdate,
                     'Sales rep': data.groupedData.customer[0].customer_salesrep,
                     'network_type': data.custrecord_bsn_type,
                     'network_id': data.custrecord_sub_network_id,
