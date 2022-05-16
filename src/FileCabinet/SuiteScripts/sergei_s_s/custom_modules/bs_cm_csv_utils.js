@@ -41,6 +41,21 @@ define([
         }
 
         const prepareCSVFileObject = (objArray, filename, args) => {
+            const fieldNames = Object.keys(objArray[0])
+            const { customFieldHandlers } = args;
+
+            if (!isNullOrEmpty(customFieldHandlers)) {
+                for (const dataRow of objArray) {
+                    for (const fieldName of fieldNames) {
+                        let value = dataRow[fieldName];
+                        if (!isNullOrEmpty(customFieldHandlers[fieldName])) {
+                            value = customFieldHandlers[fieldName](value, dataRow);
+                            dataRow[fieldName] = value;
+                        }
+                    }
+                }
+            }
+
             const csv = convertArrayOfObjectsToCSV(Object.assign({
                 data: objArray
             }, args));
@@ -57,6 +72,7 @@ define([
                 fileType: file.Type.CSV,
                 contents: csv
             });
+
 
             fileObj.folder = args.folder || 2681900;
             return fileObj;
