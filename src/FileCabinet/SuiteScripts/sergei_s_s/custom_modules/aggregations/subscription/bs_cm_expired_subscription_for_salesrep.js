@@ -31,7 +31,8 @@ define([
                 Subscription.custrecord_sub_network_id,
                 Subscription.custrecord_bsn_type,
                 
-                SubscriptionCustomer.id AS customer_subscriptionCustomerId,         
+                SubscriptionCustomer.id AS customer_subscriptionCustomerId,    
+                SubscriptionCustomer.entitytitle AS customer_name,     
                 
                 CustomerBillingAccount.id AS billingAccount_billingAccountId,
                 CustomerBillingAccount.customer AS billingAccount_billingAccountCustomer,
@@ -132,7 +133,7 @@ define([
                         AND
                         Subscription.billingsubscriptionstatus != 'TERMINATED'
                         AND
-                        Subscription.enddate < CURRENT_DATE + ${periodDays}
+                        Subscription.enddate < (CURRENT_DATE + ${periodDays})
                         ) 
                     OR
                         (
@@ -140,16 +141,16 @@ define([
                         AND
                         Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
                         AND
-                        Subscription.startdate < CURRENT_DATE + ${periodDays}
+                        Subscription.startdate < (CURRENT_DATE + ${periodDays})
                         )
                 )
               AND
-                CustomerSalesRep.entityid IS NOT NULL
+                CustomerSalesRep.entityid ${salesRepId !== '-1' ? 'IS NOT NULL' : 'IS NULL'}
               AND
                 Subscription.custrecord_sub_network_name IS NOT NULL
             `;
 
-            if (!isNullOrEmpty(salesRepId)) {
+            if (!isNullOrEmpty(salesRepId) && salesRepId !== '-1') {
                 suiteQLQuery = `${suiteQLQuery} AND CustomerSalesRep.id=${salesRepId} ORDER BY expdate ASC`;
             } else {
                 suiteQLQuery = `${suiteQLQuery} ORDER BY expdate ASC`;
@@ -168,7 +169,7 @@ define([
             }
 
             const groupsData = {
-                id: 'subscriptionId',
+                id: 'custrecord_sub_network_name',
 
                 groupPrefixDelimiter: '_',
                 groupIds: ['subscriptionCustomerId', 'billingAccountId'],
@@ -189,6 +190,7 @@ define([
                     'End date': data.enddate,
                     'Expiration date': data.expdate,
                     'Days till expiration': data.daystillexpdate,
+                    'Customers': data.groupedData.customer,
                     'Sales rep': data.groupedData.customer[0].customer_salesrep,
                     'network_type': data.custrecord_bsn_type,
                     'network_id': data.custrecord_sub_network_id,
@@ -199,6 +201,114 @@ define([
             return dataSlice;
         }
 
-        return { loadExpSubsForSalesReps }
+        function loadExpSubsWithGroupedCustomers(salesRepId, periodDays = 7) {
+            let suiteQLQuery = `
+               SELECT 
+                SubscriptionCustomer.id AS customer_id,
+                SubscriptionCustomer.entitytitle AS customer_name,
+               
+                Subscription.id AS subscription_subscriptionId,
+                Subscription.customer AS subscription_subscriptionCustomer,
+                
+                Subscription.startdate AS subscription_startdate,
+                Subscription.enddate AS subscription_enddate,
+                Subscription.nextrenewalstartdate AS subscription_nextrenewalstartdate,
+                Subscription.billingsubscriptionstatus AS subscription_billingsubscriptionstatus,
+                
+                Subscription.custrecord_sub_network_admin AS subscription_network_admin,
+                Subscription.custrecord_sub_network_name AS subscription_network_name,
+                Subscription.custrecord_sub_network_id AS subscription_sub_network_id,
+                Subscription.custrecord_bsn_type AS subscription_bsn_type,
+                
+                SubscriptionCustomer.id AS customer_subscriptionCustomerId,         
+                
+                CustomerSalesRep.entityid AS customer_salesrep, 
+
+              CASE 
+                WHEN Subscription.startdate <= CURRENT_DATE THEN 'F'
+                WHEN Subscription.startdate > CURRENT_DATE THEN 'T'
+                END AS subscription_startdate_infuture,
+                
+              CASE
+                WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
+                WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
+                END AS subscription_expdate,
+                
+              CASE
+                WHEN Subscription.startdate < CURRENT_DATE THEN CEIL((Subscription.enddate - CURRENT_DATE))
+                WHEN Subscription.startdate >= CURRENT_DATE THEN CEIL(((Subscription.startdate - 1) - CURRENT_DATE))
+              END AS subscription_daystillexpdate
+              
+              FROM
+                Customer AS SubscriptionCustomer
+              INNER JOIN
+                Subscription
+              ON
+                (SubscriptionCustomer.id = Subscription.customer)
+                
+              INNER JOIN
+                employee AS CustomerSalesRep
+              ON
+                (CustomerSalesRep.id = SubscriptionCustomer.salesrep)
+
+              WHERE
+                (
+                        (
+                        Subscription.startdate < CURRENT_DATE 
+                        AND
+                        Subscription.enddate >= CURRENT_DATE 
+                        AND
+                        Subscription.billingsubscriptionstatus != 'TERMINATED'
+                        AND
+                        Subscription.enddate < CURRENT_DATE + ${periodDays}
+                        ) 
+                    OR
+                        (
+                        Subscription.startdate >= CURRENT_DATE 
+                        AND
+                        Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                        AND
+                        Subscription.startdate < CURRENT_DATE + ${periodDays}
+                        )
+                )
+              AND
+                CustomerSalesRep.entityid IS NOT NULL
+              AND
+                Subscription.custrecord_sub_network_name IS NOT NULL
+            `;
+
+            if (!isNullOrEmpty(salesRepId)) {
+                suiteQLQuery = `${suiteQLQuery} AND CustomerSalesRep.id=${salesRepId} ORDER BY subscription_expdate ASC`;
+            } else {
+                suiteQLQuery = `${suiteQLQuery} ORDER BY expdate ASC`;
+            }
+
+            const resultSet = query.runSuiteQL(
+                {
+                    query: suiteQLQuery,
+                }
+            );
+
+            const mappedResults = resultSet.asMappedResults();
+
+            if (isNullOrEmpty(mappedResults)) {
+                return null;
+            }
+
+            const groupsData = {
+                id: 'customer_id',
+
+                groupPrefixDelimiter: '_',
+                groupIds: ['subscriptionId'],
+                groupPrefixes: ['subscription'],
+            };
+
+            return groupSQLJoinedDataNotSorted(mappedResults, groupsData);
+        }
+
+        return {
+            loadExpSubsForSalesReps,
+            loadExpSubsWithGroupedCustomers,
+        }
 
     });
