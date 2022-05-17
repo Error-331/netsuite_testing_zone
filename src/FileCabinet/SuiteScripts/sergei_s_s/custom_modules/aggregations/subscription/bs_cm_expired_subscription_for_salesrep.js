@@ -185,6 +185,7 @@ define([
 
                 dataSlice[orderId] = {
                     'Network': data.custrecord_sub_network_name,
+                    'Network type': data.custrecord_bsn_type,
                     'Network admin': data.custrecord_sub_network_admin,
                     'Start date': data.startdate,
                     'End date': data.enddate,

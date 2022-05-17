@@ -74,24 +74,55 @@ define([
                     fieldNames: Object.keys(subscriptionsList[0]),
                     fieldTypes: [
                         serverWidget.FieldType.TEXT,
+                        serverWidget.FieldType.TEXT,
                         serverWidget.FieldType.EMAIL,
                         serverWidget.FieldType.DATE,
                         serverWidget.FieldType.INTEGER,
+                        serverWidget.FieldType.TEXT,
                         serverWidget.FieldType.TEXT
                     ],
                     ignoreFieldNames: FIELDS_TO_IGNORE,
                     customFieldHandlers: {
+                        'Customers': (value) => {
+                            let links = '';
+
+                            const numOfCustomers = value.length;
+
+                            if (numOfCustomers <= 0) {
+                                return links;
+                            }
+
+                            let line = 0;
+                            for (const customer of value) {
+                                const { customer_subscriptioncustomerid, customer_name } = customer;
+
+                                links += `<a target="_blank" href="/app/common/entity/custjob.nl?id=${customer_subscriptioncustomerid}">${customer_name}</a>`;
+                                line += 1;
+
+                                if (line < numOfCustomers) {
+                                    links += '<br/>';
+                                }
+                            }
+
+                            return links;
+                        },
+
                         'Network': (value, dataRow) => {
                             const networkAdminEmail = dataRow['Network'];
-                            return `<a href="${urlToNetworkManagement}&bsn_email=${networkAdminEmail}">${value}</a>`;
+                            return `<a target="_blank" href="${urlToNetworkManagement}&bsn_email=${networkAdminEmail}">${value}</a>`;
                         },
+
+                        'Network type': (value) => {
+                            const networkType = getNetworkTypeStrByTypeId(value);
+                            return isNullOrEmpty(networkType) ? 'unknown' : networkType;
+                        }
                     },
                 }, subscriptionsList, currentForm);
             }
 
             function createForm(isSalesSubordinate = false, selectedSalesRepId, selectedPeriod) {
                 const currentForm = serverWidget.createForm({
-                    title: 'List of networks that will expire this week'
+                    title: 'List of networks that will expire'
                 });
 
                 addFormSelectBox({
@@ -100,7 +131,10 @@ define([
                         disabled: isSalesSubordinate,
                         defaultValue: selectedSalesRepId,
                     },
-                    [{ id: 0, entityid: 'All' }]
+                    [
+                        { id: -1, entityid: '-Not Assigned-' },
+                        { id: 0, entityid: 'All' }
+                    ]
                         .concat(loadActiveSalesRepsNames())
                         .map(dataRow => ({ value: dataRow.id, text: dataRow.entityid })),
                     currentForm
@@ -169,7 +203,32 @@ define([
                 removeFieldsFromObjectsArray(subscriptionsList, FIELDS_TO_IGNORE);
 
                 const csvFileObj = prepareCSVFileObject(subscriptionsList, null, {
-                    filenamePrefix: 'networks'
+                    filenamePrefix: 'networks',
+
+                    customFieldHandlers: {
+                        'Customers': (value) => {
+                            const customers = [];
+                            for (const customer of value) {
+                                const { customer_name } = customer;
+                                customers.push(customer_name);
+                            }
+
+                            return customers.join('; ').replace(/\,/g, '');
+                        },
+
+                        'Sales rep': (value) => {
+                            if (value === null) {
+                                return ' ';
+                            } else {
+                                return value.replace(/\,/g, '');
+                            }
+                        },
+
+                        'Network type': (value) => {
+                            const networkType = getNetworkTypeStrByTypeId(value);
+                            return isNullOrEmpty(networkType) ? 'unknown' : networkType;
+                        },
+                    }
                 });
 
                 response.writeFile(csvFileObj, false);
@@ -186,6 +245,7 @@ define([
 
                 let currentEmployeeId = getCurrentEmployeeId();
                 //currentEmployeeId = 4203;
+                //143898
 
                 const isSalesSubordinate = checkIfSalesSubordinate(currentEmployeeId);
                 const selectedSalesRepId = determineSelSalesRepId(currentEmployeeId, isSalesSubordinate, custpage_salesrepselect, salesrepidreq);
