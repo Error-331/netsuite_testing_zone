@@ -77,10 +77,35 @@ define([
                         serverWidget.FieldType.EMAIL,
                         serverWidget.FieldType.DATE,
                         serverWidget.FieldType.INTEGER,
+                        serverWidget.FieldType.TEXT,
                         serverWidget.FieldType.TEXT
                     ],
                     ignoreFieldNames: FIELDS_TO_IGNORE,
                     customFieldHandlers: {
+                        'Customers': (value) => {
+                            let links = '';
+
+                            const numOfCustomers = value.length;
+
+                            if (numOfCustomers <= 0) {
+                                return links;
+                            }
+
+                            let line = 0;
+                            for (const customer of value) {
+                                const { customer_subscriptioncustomerid, customer_name } = customer;
+
+                                links += `<a href="/app/common/entity/custjob.nl?id=${customer_subscriptioncustomerid}">${customer_name}</a>`;
+                                line += 1;
+
+                                if (line < numOfCustomers) {
+                                    links += '<br/>';
+                                }
+                            }
+
+                            return links;
+                        },
+
                         'Network': (value, dataRow) => {
                             const networkAdminEmail = dataRow['Network'];
                             return `<a href="${urlToNetworkManagement}&bsn_email=${networkAdminEmail}">${value}</a>`;
@@ -100,7 +125,10 @@ define([
                         disabled: isSalesSubordinate,
                         defaultValue: selectedSalesRepId,
                     },
-                    [{ id: 0, entityid: 'All' }]
+                    [
+                        { id: -1, entityid: '-Not Assigned-' },
+                        { id: 0, entityid: 'All' }
+                    ]
                         .concat(loadActiveSalesRepsNames())
                         .map(dataRow => ({ value: dataRow.id, text: dataRow.entityid })),
                     currentForm
@@ -169,7 +197,19 @@ define([
                 removeFieldsFromObjectsArray(subscriptionsList, FIELDS_TO_IGNORE);
 
                 const csvFileObj = prepareCSVFileObject(subscriptionsList, null, {
-                    filenamePrefix: 'networks'
+                    filenamePrefix: 'networks',
+
+                    customFieldHandlers: {
+                        'Customers': (value) => {
+                            const customers = [];
+                            for (const customer of value) {
+                                const { customer_name } = customer;
+                                customers.push(customer_name);
+                            }
+
+                            return customers.join('; ')
+                        }
+                    }
                 });
 
                 response.writeFile(csvFileObj, false);
@@ -185,7 +225,8 @@ define([
                 } = request.parameters;
 
                 let currentEmployeeId = getCurrentEmployeeId();
-               // currentEmployeeId = 4203;
+                //currentEmployeeId = 4203;
+                //143898
 
                 const isSalesSubordinate = checkIfSalesSubordinate(currentEmployeeId);
                 const selectedSalesRepId = determineSelSalesRepId(currentEmployeeId, isSalesSubordinate, custpage_salesrepselect, salesrepidreq);
