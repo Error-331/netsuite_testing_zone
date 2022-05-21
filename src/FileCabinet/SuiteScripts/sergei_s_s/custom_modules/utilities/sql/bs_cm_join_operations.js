@@ -134,7 +134,7 @@ define(['./../bs_cm_general_utils'],
             };
         }
 
-        function groupSQLJoinedDataNotSorted(dataRows, groupsData) {
+        function groupSQLJoinedData(dataRows, groupsData) {
             // check input data
             if (isNullOrEmpty(dataRows)) {
                 throw new Error('Data cannot be NULL or empty');
@@ -155,7 +155,9 @@ define(['./../bs_cm_general_utils'],
             const { groupIdsInData } = prepareGroupsMetaData(dataRows[0], groupsData);
 
             // prepare temporary variables
-            const groupsDataResult = {};
+            const groupsDataResultObj = {};
+            const groupsDataResultArray = [];
+
             let orderId = 0;
 
             // find primary id raw column name
@@ -173,13 +175,14 @@ define(['./../bs_cm_general_utils'],
                 const { noneGroupedData, groupedData } = extractGroupedDataFromRow(dataRow, groupPrefixes, groupPrefixDelimiter);
 
                 // add new data object if new primary id is found
-                if (isNullOrEmpty(groupsDataResult[currentRowIdValue])) {
-                    groupsDataResult[currentRowIdValue] = Object.assign({}, noneGroupedData);
+                if (isNullOrEmpty(groupsDataResultObj[currentRowIdValue])) {
+                    groupsDataResultObj[currentRowIdValue] = Object.assign({}, noneGroupedData);
 
+                    groupsDataResultObj[currentRowIdValue].orderId = orderId;
+                    groupsDataResultObj[currentRowIdValue].groupsIdValues = groupPrefixes.reduce((groupsIdValues, groupName) => { groupsIdValues[groupName] = []; return groupsIdValues }, {});
+                    groupsDataResultObj[currentRowIdValue].groupedData = groupPrefixes.reduce((groupsDataAccumulator, groupName) => { groupsDataAccumulator[groupName] = []; return groupsDataAccumulator }, {});
 
-                    groupsDataResult[currentRowIdValue].orderId = orderId;
-                    groupsDataResult[currentRowIdValue].groupsIdValues = groupPrefixes.reduce((groupsIdValues, groupName) => { groupsIdValues[groupName] = []; return groupsIdValues }, {});
-                    groupsDataResult[currentRowIdValue].groupedData = groupPrefixes.reduce((groupsDataAccumulator, groupName) => { groupsDataAccumulator[groupName] = []; return groupsDataAccumulator }, {});
+                    groupsDataResultArray.push(groupsDataResultObj[currentRowIdValue]);
 
                     orderId++;
                 }
@@ -190,18 +193,37 @@ define(['./../bs_cm_general_utils'],
 
                     const groupPrefix = groupPrefixes[groupPrefixIndex];
 
-                    if (!isNullOrEmpty(groupIdValue) && !groupsDataResult[currentRowIdValue].groupsIdValues[groupPrefix].includes(groupIdValue)) {
-                        groupsDataResult[currentRowIdValue].groupsIdValues[groupPrefix].push(groupIdValue);
-                        groupsDataResult[currentRowIdValue].groupedData[groupPrefix].push(groupedData[groupPrefix]);
+                    if (!isNullOrEmpty(groupIdValue) && !groupsDataResultObj[currentRowIdValue].groupsIdValues[groupPrefix].includes(groupIdValue)) {
+                        groupsDataResultObj[currentRowIdValue].groupsIdValues[groupPrefix].push(groupIdValue);
+                        groupsDataResultObj[currentRowIdValue].groupedData[groupPrefix].push(groupedData[groupPrefix]);
                     }
                 }
             }
 
-            return groupsDataResult;
+            return {
+                groupsDataResultObj,
+                groupsDataResultArray,
+            };
         }
 
-        function groupSQLJoinedDataAsArray(dataRows, groupsData) {
+        function groupSQLJoinedDataNotSorted(dataRows, groupsData) {
+            return groupSQLJoinedData(dataRows, groupsData).groupsDataResultObj;
+        }
 
+        function groupSQLJoinedDataSortedArray(dataRows, groupsData) {
+            return groupSQLJoinedData(dataRows, groupsData).groupsDataResultArray;
+        }
+
+        function groupSQLJoinedOrderedDataAsArray(dataRows, groupsData, lightVersion = false) {
+            const rawData = groupSQLJoinedData(dataRows, groupsData).groupsDataResultArray;
+
+            if (lightVersion) {
+                for (const dataRow of rawData) {
+                    delete dataRow.orderId;
+                }
+            } else {
+                return rawData;
+            }
         }
 
         return {
@@ -211,6 +233,7 @@ define(['./../bs_cm_general_utils'],
             extractGroupedDataFromRow,
 
             groupSQLJoinedDataNotSorted,
-            groupSQLJoinedDataAsArray,
+            groupSQLJoinedDataSortedArray,
+            groupSQLJoinedOrderedDataAsArray,
         }
     });
