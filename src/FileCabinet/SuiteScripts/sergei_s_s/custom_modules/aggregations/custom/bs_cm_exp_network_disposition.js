@@ -9,8 +9,17 @@ define([
     /**
  * @param{query} query
  */
-    (record, query, { groupSQLJoinedDataSortedArray }) => {
-        function loadExpiredNetworksWithDispositionData() {
+    (record, query, { groupSQLJoinedDataNotSorted, groupSQLJoinedDataSortedArray }) => {
+        const EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING = {
+            id: 'custrecord_sub_network_id',
+
+            groupPrefixDelimiter: '_',
+            groupIds: ['subscriptionId'],
+            groupPrefixes: ['subscription']
+        }
+
+
+        function loadExpiredNetworksWithDispositionDataRaw() {
             const suiteQLQuery = `
                 SELECT
                     Subscription.id AS subscription_subscriptionId,
@@ -26,6 +35,7 @@ define([
                     NetworkDisposition.custrecorddate_add,
                     
                     DispositionList.name AS actionName,
+                    LastEmployee.entityid AS employeename,
                     
                 CASE
                     WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
@@ -77,30 +87,34 @@ define([
                     customlistbs_cl_disposition_action AS DispositionList
                 ON
                     (NetworkDisposition.custrecordaction = DispositionList.id)
+                LEFT OUTER JOIN
+                    employee AS LastEmployee
+                ON
+                    (NetworkDisposition.custrecordemployee_id = LastEmployee.id)                    
            `;
 
-            let resultSet = query.runSuiteQL({ query: suiteQLQuery }).asMappedResults();
-            const groupsData = {
-                id: 'custrecord_sub_network_id',
+            return query.runSuiteQL({ query: suiteQLQuery }).asMappedResults();
+        }
 
-                groupPrefixDelimiter: '_',
-                groupIds: ['subscriptionId'],
-                groupPrefixes: ['subscription']
-            }
-
-            return groupSQLJoinedDataSortedArray(resultSet, groupsData).map(
+        function loadExpiredNetworksWithDispositionData() {
+            const resultSet = loadExpiredNetworksWithDispositionDataRaw();
+            return groupSQLJoinedDataSortedArray(resultSet, EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING).map(
                 dataRow => ({
                     'Network name': dataRow['custrecord_sub_network_name'],
                     'Subscription records': dataRow.groupedData['subscription'],
                     'Subscription Record Expire Date': dataRow.groupedData['subscription'],
-                    'Action': dataRow['actionName'],
-                    'Employee': dataRow['custrecordemployee_id'],
+                    'Action': dataRow['actionname'],
                     'CS Team Notes': dataRow['custrecordnote'],
+                    'employeename': dataRow['employeename'],
+                    'networkid': dataRow['custrecord_sub_network_id']
                 })
             );
-
-
 // 23 // 10
+        }
+
+        function loadExpiredNetworksWithDispositionDataByNetwork() {
+            const resultSet = loadExpiredNetworksWithDispositionDataRaw();
+            return groupSQLJoinedDataNotSorted(resultSet, EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING);
         }
 
         function upsertDisposition(networkId, actionId, employeeId, note) {
@@ -149,5 +163,10 @@ define([
             });
         }
 
-        return { loadExpiredNetworksWithDispositionData, upsertDisposition }
+        return {
+            loadExpiredNetworksWithDispositionDataRaw,
+            loadExpiredNetworksWithDispositionData,
+            loadExpiredNetworksWithDispositionDataByNetwork,
+
+            upsertDisposition }
     });
