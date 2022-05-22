@@ -6,6 +6,7 @@ define([
         'N/ui/serverWidget',
         './../../custom_modules/utilities/bs_cm_general_utils',
         './../../custom_modules/utilities/ui/bs_cm_ui_form_sublist',
+        './../../custom_modules/utilities/bs_cm_runtime_utils',
         './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
     ],
     /**
@@ -13,10 +14,12 @@ define([
  */
     (
         serverWidget,
-        { isNullOrEmpty },
+        { isNullOrEmpty, toInt },
         { addFormSublist },
+        { getCurrentEmployeeId },
         { upsertDisposition, loadExpiredNetworksWithDispositionData },
         ) => {
+        const FIELDS_TO_IGNORE = ['networkid', 'employeename'];
         const SUBLIST_ID = 'networkslist';
 
         function createNetworksSublist(currentForm, networksList = []) {
@@ -32,9 +35,9 @@ define([
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
-                    serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT
                 ],
+                ignoreFieldNames: FIELDS_TO_IGNORE,
                 customFieldHandlers: {
                     'Subscription records': (value) => {
                         let links = ''
@@ -54,13 +57,20 @@ define([
                         return strRows;
                     },
 
-                    'Action': (value) => {
-                        if (isNullOrEmpty(value)) {
-                            return 'No changes'
-                        } else {
-                            return value;
-                        }
+                    'Action': (value,  dataRow) => {
+                        const dataAttributes = `data-networkid=${dataRow['networkid']}`;
+                        const label = isNullOrEmpty(value) ? 'No changes' : value;
+
+                        return `<a ${dataAttributes} href="#" class="custpage_actionbtn">${label}</a>`;
                     },
+
+                    'CS Team Notes': (value, dataRow) => {
+                        if (!isNullOrEmpty(value)) {
+                            return (value.substring(0, 296) + '...');
+                        } else {
+                            return ' ';
+                        }
+                    }
                 },
             }, networksList, currentForm);
         }
@@ -75,6 +85,7 @@ define([
 
         function writePage(response) {
             const currentForm = createForm();
+            currentForm.clientScriptModulePath = './../../client_scripts/subscriptions/bs_cl_daily_subscription_expiry_report';
 
             const networksList = loadExpiredNetworksWithDispositionData();
 
@@ -93,10 +104,25 @@ define([
         function render(scriptContext) {
             const { request, response } = scriptContext;
 
+            const {
+                custpage_networkid,
+                custpage_action,
+                custpage_note,
+            } = request.parameters;
+
             if (request.method === 'GET') {
                 writePage(response);
             } else if (request.method === 'POST') {
+                response.write(JSON.stringify({
+                    custpage_networkid,
+                    custpage_action,
+                    custpage_note,
+                }));
 
+                const employeeId = getCurrentEmployeeId();
+
+                upsertDisposition(toInt(custpage_networkid), toInt(custpage_action), employeeId, custpage_note)
+                writePage(response);
             } else {
                 response.write('Wrong request method. Please open current suitelet using link.');
             }
