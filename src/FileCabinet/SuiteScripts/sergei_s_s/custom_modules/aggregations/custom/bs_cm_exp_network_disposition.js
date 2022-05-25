@@ -4,12 +4,22 @@
 define([
         'N/record',
         'N/query',
-        './../../utilities/sql/bs_cm_join_operations'
+        './../../aggregations/custom/bs_cm_disposition_action_list',
+        './../../utilities/sql/bs_cm_join_operations',
+        './../../utilities/bs_cm_runtime_utils',
+        './../../utilities/specific/bs_cm_daily_subscription_expiry_report_utils'
     ],
     /**
  * @param{query} query
  */
-    (record, query, { groupSQLJoinedDataNotSorted, groupSQLJoinedDataSortedArray }) => {
+    (
+        record,
+        query,
+        { loadDispositionActionNameById },
+        { groupSQLJoinedDataNotSorted, groupSQLJoinedDataSortedArray },
+        { getCurrentEmployeeName },
+        { prepareNoteHeader }
+    ) => {
         const EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING = {
             id: 'custrecord_sub_network_id',
 
@@ -135,7 +145,7 @@ define([
             if (resultSet.length === 0) {
                 objRecord = record.create({
                     type: 'customrecordbs_cr_expired_network_dispos',
-                    isDynamic: false
+                    isDynamic: false,
                 });
             } else {
                 objRecord = record.load({
@@ -157,10 +167,33 @@ define([
                 objRecord.setValue({ fieldId: 'custrecorddate_add', value: currentDate });
             }
 
-            return objRecord.save({
+            const dispositionId = objRecord.save({
                 enableSourcing: false,
                 ignoreMandatoryFields: true
             });
+
+            // add note
+            const noteRecord = record.create({
+                type: 'note',
+                isDynamic: false
+            });
+
+            const title = prepareNoteHeader(currentDate, loadDispositionActionNameById(actionId), getCurrentEmployeeName());
+
+            noteRecord.setValue({ fieldId: 'type', value: 'note' });
+            noteRecord.setValue({ fieldId: 'recordtype', value: objRecord.getValue('rectype') });
+            noteRecord.setValue({ fieldId: 'record', value: dispositionId });
+            noteRecord.setValue({ fieldId: 'notedate', value: currentDate });
+            noteRecord.setValue({ fieldId: 'author', value: employeeId });
+            noteRecord.setValue({ fieldId: 'title', value: title });
+            noteRecord.setValue({ fieldId: 'note', value: note });
+
+            noteRecord.save({
+                enableSourcing: false,
+                ignoreMandatoryFields: true
+            });
+
+            return dispositionId;
         }
 
         return {
