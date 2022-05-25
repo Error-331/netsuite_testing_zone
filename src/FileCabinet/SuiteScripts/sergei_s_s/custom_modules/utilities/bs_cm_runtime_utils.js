@@ -24,6 +24,11 @@ define([
             return id;
         }
 
+        function getCurrentEmployeeName() {
+            const { name } = runtime.getCurrentUser();
+            return name;
+        }
+
         function getScriptURLPathQuery(scriptId, deploymentId, returnExternalURL = true) {
             return url.resolveScript({
                 scriptId,
@@ -56,6 +61,7 @@ define([
         return {
             getScriptParameterByName,
             getCurrentEmployeeId,
+            getCurrentEmployeeName,
             getScriptURLPathQuery,
             getScriptCurrentURLPathQuery,
             getScriptCurrentURLPath,
