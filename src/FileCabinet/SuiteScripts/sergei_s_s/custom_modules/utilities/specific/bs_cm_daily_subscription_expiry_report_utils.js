@@ -4,10 +4,13 @@
 define(['./../../libs/vendor/moment'],
     
     (moment) => {
-        function prepareNoteHeader(dateAdd, actionName, userName) {
-            const formattedDate = moment(dateAdd).format('D-MMM-YYYY');
-            return `${formattedDate} | [${actionName}] | ${userName}`;
+        function formatDateForReport(userDate) {
+            return moment(userDate).format('D-MMM-YYYY');
         }
 
-        return { prepareNoteHeader }
+        function prepareNoteHeader(dateAdd, actionName, userName) {
+            return `${formatDateForReport(dateAdd)} | [${actionName}] | ${userName}`;
+        }
+
+        return { formatDateForReport, prepareNoteHeader }
     });
