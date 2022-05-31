@@ -9,6 +9,7 @@ define([
      './../../custom_modules/aggregations/custom/bs_cm_disposition_action_list',
     './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
     './../../custom_modules/utilities/ui/bs_cm_c_ui_dialogbox',
+    './../../custom_modules/utilities/bs_cm_general_utils',
 ],
 /**
  * @param{dialog} dialog
@@ -21,6 +22,7 @@ function(
     { loadDispositionActionForSelect },
     { loadExpiredNetworksWithDispositionDataByNetwork },
     { showLoadingDialog },
+    { isNullOrEmpty, toInt },
 ) {
     // state variables
     let $actionButtons;
@@ -31,7 +33,7 @@ function(
     // DOM action handlers
     function onActionButtonClick({ target }) {
         const networkId = target.dataset.networkid;
-        showEditDialog(networkId, expiredNetworks[networkId].custrecordnote);
+        showEditDialog(networkId, expiredNetworks[networkId].custrecordnote, expiredNetworks[networkId].custrecordaction);
     }
 
     function onDispositionFormSubmitClick() {
@@ -50,12 +52,12 @@ function(
         });
     }
 
-    function showEditDialog(networkId, note) {
+    function showEditDialog(networkId, note, selectedActionId) {
         const optionsStr = dispositionActions.reduce((options, { id, name }) => {
-            options += `<option value="${id}">${name}</option>`;
+            options += `<option value="${id}" ${(!isNullOrEmpty(selectedActionId) && toInt(selectedActionId) === id) ? 'selected' : ''}>${name}</option>`;
             return options;
         }, '');
-
+console.log('ff', note);
         const formHTML = `
             <form id="custpage_dispositionform" method="post" style="display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: stretch; align-content: flex-start;">
                 <div style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; display: flex; flex-flow: row nowrap; justify-content: flex-start; align-items: center; align-content: flex-start;">
@@ -64,7 +66,7 @@ function(
                         ${ optionsStr }
                     </select>
                 </div>
-                <textarea name="custpage_note" rows="5" cols="30" style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; resize: none; margin-top: 10px;" maxlength="200">${note}</textarea>
+                <textarea name="custpage_note" rows="5" cols="30" style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; resize: none; margin-top: 10px;" maxlength="200">${isNullOrEmpty(note) ? '' : note}</textarea>
                 <div style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; margin-top: 5px; font-size: 10px">The maximum allowed field length is 200 characters</div>
                 <input type="hidden" name="custpage_networkid" value="${networkId}">
             </form>
