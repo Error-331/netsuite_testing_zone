@@ -38,6 +38,7 @@ define([
                     
                     GroupedNetworkIds.subscriptionCnt,
                     
+                    NetworkDisposition.id AS custrecord_id,
                     NetworkDisposition.custrecordaction,
                     NetworkDisposition.custrecordemployee_id,
                     NetworkDisposition.custrecordnote,
@@ -50,7 +51,13 @@ define([
                 CASE
                     WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
                     WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
-                    END AS subscription_expdate   
+                    END AS subscription_expdate,
+                
+                CASE
+                    WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate - 74
+                    WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 75
+                    END AS subscription_renewalemaildate
+                
                 FROM
                     Subscription 
                 INNER JOIN
@@ -113,10 +120,13 @@ define([
                     'Network name': dataRow['custrecord_sub_network_name'],
                     'Subscription records': dataRow.groupedData['subscription'],
                     'Subscription Record Expire Date': dataRow.groupedData['subscription'],
+                    'Renewal Email Date': dataRow.groupedData['subscription'],
                     'Action': dataRow['actionname'],
                     'CS Team Notes': dataRow['custrecordnote'],
                     'employeename': dataRow['employeename'],
-                    'networkid': dataRow['custrecord_sub_network_id']
+                    'networkid': dataRow['custrecord_sub_network_id'],
+                    'datemodified': dataRow['custrecorddate_modified'],
+                    'dispositionid': dataRow['custrecord_id'],
                 })
             );
 // 23 // 10

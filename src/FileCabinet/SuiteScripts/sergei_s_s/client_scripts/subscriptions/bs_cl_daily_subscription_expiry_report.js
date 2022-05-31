@@ -7,7 +7,8 @@ define([
     'N/ui/dialog',
     'N/ui/message',
      './../../custom_modules/aggregations/custom/bs_cm_disposition_action_list',
-    './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition'
+    './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
+    './../../custom_modules/utilities/ui/bs_cm_c_ui_dialogbox',
 ],
 /**
  * @param{dialog} dialog
@@ -18,7 +19,8 @@ function(
     dialog,
     message,
     { loadDispositionActionForSelect },
-    { loadExpiredNetworksWithDispositionDataByNetwork }
+    { loadExpiredNetworksWithDispositionDataByNetwork },
+    { showLoadingDialog },
 ) {
     // state variables
     let $actionButtons;
@@ -30,6 +32,10 @@ function(
     function onActionButtonClick({ target }) {
         const networkId = target.dataset.networkid;
         showEditDialog(networkId, expiredNetworks[networkId].custrecordnote);
+    }
+
+    function onDispositionFormSubmitClick() {
+        document.getElementById('custpage_dispositionform').submit();
     }
 
     // business logic
@@ -58,7 +64,8 @@ function(
                         ${ optionsStr }
                     </select>
                 </div>
-                <textarea name="custpage_note" rows="10" cols="30" style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; resize: none; margin-top: 10px;">${note}</textarea>
+                <textarea name="custpage_note" rows="5" cols="30" style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; resize: none; margin-top: 10px;" maxlength="200">${note}</textarea>
+                <div style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; margin-top: 5px; font-size: 10px">The maximum allowed field length is 200 characters</div>
                 <input type="hidden" name="custpage_networkid" value="${networkId}">
             </form>
         `;
@@ -67,7 +74,7 @@ function(
             title: 'Update disposition',
             message: formHTML,
             buttons: [
-                { label: 'submit', value: 1 },
+                { label: 'update', value: 1 },
                 { label: 'cancel', value: 2 },
             ],
         };
@@ -77,16 +84,10 @@ function(
         const $dialogButtons = document.querySelectorAll('.x-window button');
         $dialogButtons[0].classList.add('pgBntB');
 
-        const b = $dialogButtons[0].cloneNode(true);
+        const $submitButton = $dialogButtons[0].cloneNode(true);
+        $dialogButtons[0].replaceWith($submitButton);
 
-        $dialogButtons[0].replaceWith(b);
-
-        b.addEventListener('click', () => {
-            const $form = document.getElementById('custpage_dispositionform');
-            console.log('ss', $form);
-
-            document.getElementById('custpage_dispositionform').submit();
-        });
+        $submitButton.addEventListener('click', onDispositionFormSubmitClick);
     }
 
     // page action handlers
@@ -100,17 +101,12 @@ function(
      * @since 2015.2
      */
     function pageInit(scriptContext) {
-        /*const dialogOptions = {
-            title: 'Notice',
-            message: `Data is loading. Please wait...`,
-        };
-
-        dialog.create(dialogOptions)*/
-
-
-        $actionButtons = document.querySelectorAll('.custpage_actionbtn');
-        loadData();
-        bindActions();
+        const hideLoadingDialog = showLoadingDialog(() => {
+            $actionButtons = document.querySelectorAll('.custpage_actionbtn');
+            loadData();
+            bindActions();
+            hideLoadingDialog();
+        });
     }
 
     /**

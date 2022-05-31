@@ -7,6 +7,21 @@ define([
     ],
     
     (serverWidget, { isNullOrEmpty }) => {
+        function composeStyleForSublistColumn(cellStyle, sublistId, columnNum) {
+            return `
+                    table#${sublistId}_splits tr td:nth-child(${columnNum}).uir-list-row-cell 
+                        ${typeof cellStyle === 'object' ? JSON.stringify(cellStyle) : '{' + cellStyle + '}'}
+                    
+                `;
+        }
+
+        function composeStyleForSublistRowColumn(cellStyle, sublistId, rowNum, columnNum) {
+            return `
+                    table#custpage_${sublistId}_splits tr:nth-child(${rowNum}) td:nth-child(${columnNum}).uir-list-row-cell {
+                        ${cellStyle}
+                    }
+                `;
+        }
 
         function addFormSublist(options, data, $form) {
             // check options
@@ -32,10 +47,12 @@ define([
                 fieldNames,
                 fieldTypes,
                 ignoreFieldNames = [],
+                columnDimensions = [],
                 customFieldHandlers = {},
                 container,
             } = options;
 
+            const rawId = id;
             id = `custpage_${id}`;
             label = showTotal ? `${label} (total: ${data.length})` : label;
 
@@ -51,7 +68,7 @@ define([
             // add 'line number' column if needed
             if (showLineNumber) {
                 $sublist.addField({
-                    id: `custpage_${id}_line_num`,
+                    id: `${id}_line_num`,
                     type: serverWidget.FieldType.INTEGER,
                     label: '#'
                 });
@@ -66,8 +83,8 @@ define([
                     continue;
                 }
 
-                $sublist.addField({
-                    id: `custpage_${id}_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                const currentField = $sublist.addField({
+                    id: `${id}_${fieldName.toLowerCase().replace(/ /g, '_')}`,
                     type: fieldTypes[line],
                     label: fieldName,
                 });
@@ -81,7 +98,7 @@ define([
             for (const dataRow of data) {
                 if (showLineNumber) {
                     $sublist.setSublistValue({
-                        id : `custpage_${id}_line_num`,
+                        id : `${id}_line_num`,
                         line : line,
                         value : line + 1
                     });
@@ -98,7 +115,7 @@ define([
                     }
 
                     $sublist.setSublistValue({
-                        id : `custpage_${id}_${fieldName.toLowerCase().replace(/ /g, '_')}`,
+                        id : `${id}_${fieldName.toLowerCase().replace(/ /g, '_')}`,
                         line,
                         value,
                     });
@@ -107,16 +124,38 @@ define([
                 line++;
             }
 
+            // add styles that controls column dimensions
+            let cssRules = '';
+
+            for (let colDimCnt = 0; colDimCnt < columnDimensions.length; colDimCnt++) {
+                const [ width, height ] = columnDimensions[colDimCnt];
+
+                let preparedWidth = isNullOrEmpty(width) ? 'inherit' : width;
+                let preparedHeight = isNullOrEmpty(height) ? 'inherit' : height;
+
+                preparedWidth = typeof preparedWidth === 'string' ? width : `${width}px`;
+                preparedHeight = typeof preparedHeight === 'string' ? height : `${height}px`;
+
+                cssRules += composeStyleForSublistColumn(`
+                    width: ${preparedWidth} !important;
+                    height: ${preparedHeight} !important;
+                `, id, `n+${colDimCnt + 1}`);
+            }
+
+            const $inlineHTML = $form.addField({
+                id: `custpage_sublist_${rawId}_custom_styles345`,
+                type: serverWidget.FieldType.INLINEHTML,
+                label: ' '
+            });
+
+            $inlineHTML.defaultValue = `<style>${cssRules}</style>`;
+
+            $inlineHTML.updateLayoutType({
+                layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
+            });
+
             // return sublist object
             return $sublist;
-        }
-
-        function composeStyleForSublistRowColumn(cellStyle, sublistId, rowNum, columnNum) {
-            return `
-                    table#custpage_${sublistId}_splits tr:nth-child(${rowNum}) td:nth-child(${columnNum}).uir-list-row-cell {
-                        ${cellStyle}
-                    }
-                `;
         }
 
         function addStyleToSpecificSublistColumns(options, $form, style = '', rowColumnIds = []) {

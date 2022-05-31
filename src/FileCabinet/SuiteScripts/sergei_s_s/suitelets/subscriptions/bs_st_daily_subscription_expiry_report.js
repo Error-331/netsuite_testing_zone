@@ -7,6 +7,7 @@ define([
         './../../custom_modules/utilities/bs_cm_general_utils',
         './../../custom_modules/utilities/ui/bs_cm_ui_form_sublist',
         './../../custom_modules/utilities/bs_cm_runtime_utils',
+        './../../custom_modules/utilities/specific/bs_cm_daily_subscription_expiry_report_utils',
         './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
     ],
     /**
@@ -17,9 +18,10 @@ define([
         { isNullOrEmpty, toInt },
         { addFormSublist },
         { getCurrentEmployeeId },
+        { formatDateForReport, prepareNoteHeader },
         { upsertDisposition, loadExpiredNetworksWithDispositionData },
         ) => {
-        const FIELDS_TO_IGNORE = ['networkid', 'employeename'];
+        const FIELDS_TO_IGNORE = ['networkid', 'employeename', 'datemodified', 'dispositionid'];
         const SUBLIST_ID = 'networkslist';
 
         function createNetworksSublist(currentForm, networksList = []) {
@@ -35,7 +37,18 @@ define([
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
+                    serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT
+                ],
+
+                columnDimensions: [
+                    [ '2%', 70 ],
+                    [ '5%', 70 ],
+                    [ '8%', 70 ],
+                    [ '10%', 70 ],
+                    [ '10%', 70 ],
+                    [ '5%', 70 ],
+                    [ '60%', 70 ]
                 ],
                 ignoreFieldNames: FIELDS_TO_IGNORE,
                 customFieldHandlers: {
@@ -51,7 +64,16 @@ define([
                     'Subscription Record Expire Date': (value) => {
                         let strRows = ''
                         for (const { subscription_expdate } of value) {
-                            strRows += `${subscription_expdate}<br/>`
+                            strRows += `${formatDateForReport(subscription_expdate)}<br/>`
+                        }
+
+                        return strRows;
+                    },
+
+                    'Renewal Email Date': (value) => {
+                        let strRows = ''
+                        for (const { subscription_renewalemaildate } of value) {
+                            strRows += `${formatDateForReport(subscription_renewalemaildate)}<br/>`
                         }
 
                         return strRows;
@@ -61,12 +83,16 @@ define([
                         const dataAttributes = `data-networkid=${dataRow['networkid']}`;
                         const label = isNullOrEmpty(value) ? 'No changes' : value;
 
-                        return `<a ${dataAttributes} href="#" class="custpage_actionbtn">${label}</a>`;
+                        return `<a ${dataAttributes} href="#" class="custpage_actionbtn" style="white-space: nowrap;">${label}</a>`;
                     },
 
                     'CS Team Notes': (value, dataRow) => {
                         if (!isNullOrEmpty(value)) {
-                            return (value.substring(0, 296) + '...');
+                            const noteHeader = prepareNoteHeader(dataRow['datemodified'], dataRow['Action'], dataRow['employeename']);
+                            value = `${noteHeader} | ${value}`;
+
+                            const linkToNotes = `<a style="display: block; text-align: center; margin-top: 20px" href="/app/common/custom/custrecordentry.nl?rectype=569&id=${dataRow['dispositionid']}">Notes</a>`;
+                            return (value.length + linkToNotes.length) > 300 ? `${value.substring(0, 297 - linkToNotes.length)}...${linkToNotes}` : `${value}${linkToNotes}`;
                         } else {
                             return ' ';
                         }
