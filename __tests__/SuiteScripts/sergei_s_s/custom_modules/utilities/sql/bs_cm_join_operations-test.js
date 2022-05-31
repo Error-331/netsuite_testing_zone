@@ -4,9 +4,17 @@ import {
     prepareGroupsMetaData,
     extractGroupedDataFromRow,
 
-    groupSQLJoinedData,
+    groupSQLJoinedDataNotSorted,
+    groupSQLJoinedDataSortedArray,
+    groupSQLJoinedOrderedDataAsArray,
 } from './../../../../../../src/FileCabinet/SuiteScripts/sergei_s_s/custom_modules/utilities/sql/bs_cm_join_operations';
-const testSubscriptionsData1 = require('./../../../../../../src/test_data/utilities/sql/left_outer_inner_join_subscription1');
+
+const testSubscriptionsData1 = require('./left_outer_inner_join_subscription1.json');
+const {
+    unorderedObjectData1,
+    orderedArrayData1,
+    orderedArrayData1WithoutServiceInfo,
+} = require('./bs_cm_join_operations_tests_data');
 
 describe('Custom modules / utilities / sql / join operations', () => {
     const dataRowKeys1 = Object.keys(testSubscriptionsData1[0]);
@@ -199,422 +207,29 @@ describe('Custom modules / utilities / sql / join operations', () => {
         });
     });
 
-    describe('groupSQLJoinedData function tests', () => {
-        it('it should...', () => {
-            const groupedData = groupSQLJoinedData(testSubscriptionsData1, groupsData1);
-
-            expect(groupedData).toEqual(
-                {
-                    "502": {
-                        "subscriptionid": 502,
-                        "subscriptioncustomer": 18,
-
-                        "groupsIdValues": { 'сustomer': [18], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 18,
-                                    "сustomer_addr1": null,
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": null,
-                                    "сustomer_state": null,
-                                    "сustomer_zip": null,
-                                    "сustomer_country": null,
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "501": {
-                        "subscriptionid": 501,
-                        "subscriptioncustomer": 18,
-
-                        "groupsIdValues": { 'сustomer': [18], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 18,
-                                    "сustomer_addr1": null,
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": null,
-                                    "сustomer_state": null,
-                                    "сustomer_zip": null,
-                                    "сustomer_country": null,
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "1808": {
-                        "subscriptionid": 1808,
-                        "subscriptioncustomer": 2099,
-
-                        "groupsIdValues": { 'сustomer': [2099], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 2099,
-                                    "сustomer_addr1": "Lot 4 Parklands Estate",
-                                    "сustomer_addr2": "23 South Street",
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Rydallmere",
-                                    "сustomer_state": "NSW",
-                                    "сustomer_zip": "2116",
-                                    "сustomer_country": "AU",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "5968": {
-                        "subscriptionid": 5968,
-                        "subscriptioncustomer": 2503,
-
-                        "groupsIdValues": { 'сustomer': [2503], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 2503,
-                                    "сustomer_addr1": "Parkstrasse 1",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Schonenwerd",
-                                    "сustomer_state": null,
-                                    "сustomer_zip": "CH-5012",
-                                    "сustomer_country": "CH",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "5961": {
-                        "subscriptionid": 5961,
-                        "subscriptioncustomer": 2505,
-
-                        "groupsIdValues": { 'сustomer': [2505], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 2505,
-                                    "сustomer_addr1": "Vinces Road",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Diss, Norfolk",
-                                    "сustomer_state": null,
-                                    "сustomer_zip": "IP22 4YT",
-                                    "сustomer_country": "GB",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "5928": {
-                        "subscriptionid": 5928,
-                        "subscriptioncustomer": 2505,
-
-                        "groupsIdValues": { 'сustomer': [2505], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 2505,
-                                    "сustomer_addr1": "Vinces Road",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Diss, Norfolk",
-                                    "сustomer_state": null,
-                                    "сustomer_zip": "IP22 4YT",
-                                    "сustomer_country": "GB",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "5914": {
-                        "subscriptionid": 5914,
-                        "subscriptioncustomer": 2505,
-
-                        "groupsIdValues": { 'сustomer': [2505], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 2505,
-                                    "сustomer_addr1": "Vinces Road",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Diss, Norfolk",
-                                    "сustomer_state": null,
-                                    "сustomer_zip": "IP22 4YT",
-                                    "сustomer_country": "GB",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "5956": {
-                        "subscriptionid": 5956,
-                        "subscriptioncustomer": 2505,
-
-                        "groupsIdValues": { 'сustomer': [2505], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 2505,
-                                    "сustomer_addr1": "Vinces Road",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Diss, Norfolk",
-                                    "сustomer_state": null,
-                                    "сustomer_zip": "IP22 4YT",
-                                    "сustomer_country": "GB",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "5930": {
-                        "subscriptionid": 5930,
-                        "subscriptioncustomer": 2689,
-
-                        "groupsIdValues": { 'сustomer': [2689], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 2689,
-                                    "сustomer_addr1": "Units 36 and 37",
-                                    "сustomer_addr2": "2861 Sherwood Heights Drive #36-37",
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Oakville",
-                                    "сustomer_state": "ON",
-                                    "сustomer_zip": "L6J7K1",
-                                    "сustomer_country": "CA",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "5923": {
-                        "subscriptionid": 5923,
-                        "subscriptioncustomer": 3116,
-
-                        "groupsIdValues": { 'сustomer': [3116], billingAccount: [9532] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 3116,
-                                    "сustomer_addr1": "2709 Commerce Way",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Philadelphia",
-                                    "сustomer_state": "PA",
-                                    "сustomer_zip": "19154",
-                                    "сustomer_country": "US",
-                                }
-                            ],
-                            billingAccount: [
-                                {
-                                    "billingaccount_billingaccountid": 9532,
-                                    "billingaccount_billingaccountcustomer": 3116,
-                                    "billingaccount_addr1": "2709 Commerce Way",
-                                    "billingaccount_addr2": null,
-                                    "billingaccount_addr3": null,
-                                    "billingaccount_city": "Philadelphia",
-                                    "billingaccount_state": "PA",
-                                    "billingaccount_zip": "19154",
-                                    "billingaccount_country": "US"
-                                }
-                            ]
-                        },
-                    },
-                    "5911": {
-                        "subscriptionid": 5911,
-                        "subscriptioncustomer": 3116,
-
-                        "groupsIdValues": { 'сustomer': [3116], billingAccount: [9532] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 3116,
-                                    "сustomer_addr1": "2709 Commerce Way",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Philadelphia",
-                                    "сustomer_state": "PA",
-                                    "сustomer_zip": "19154",
-                                    "сustomer_country": "US",
-                                }
-                            ],
-                            billingAccount: [
-                                {
-                                    "billingaccount_billingaccountid": 9532,
-                                    "billingaccount_billingaccountcustomer": 3116,
-                                    "billingaccount_addr1": "2709 Commerce Way",
-                                    "billingaccount_addr2": null,
-                                    "billingaccount_addr3": null,
-                                    "billingaccount_city": "Philadelphia",
-                                    "billingaccount_state": "PA",
-                                    "billingaccount_zip": "19154",
-                                    "billingaccount_country": "US"
-                                }
-                            ]
-                        },
-                    },
-                    "5971": {
-                        "subscriptionid": 5971,
-                        "subscriptioncustomer": 3116,
-
-                        "groupsIdValues": { 'сustomer': [3116], billingAccount: [9532] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 3116,
-                                    "сustomer_addr1": "2709 Commerce Way",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Philadelphia",
-                                    "сustomer_state": "PA",
-                                    "сustomer_zip": "19154",
-                                    "сustomer_country": "US",
-                                }
-                            ],
-                            billingAccount: [
-                                {
-                                    "billingaccount_billingaccountid": 9532,
-                                    "billingaccount_billingaccountcustomer": 3116,
-                                    "billingaccount_addr1": "2709 Commerce Way",
-                                    "billingaccount_addr2": null,
-                                    "billingaccount_addr3": null,
-                                    "billingaccount_city": "Philadelphia",
-                                    "billingaccount_state": "PA",
-                                    "billingaccount_zip": "19154",
-                                    "billingaccount_country": "US"
-                                }
-                            ]
-                        },
-                    },
-                    "6015": {
-                        "subscriptionid": 6015,
-                        "subscriptioncustomer": 3116,
-
-                        "groupsIdValues": { 'сustomer': [3116], billingAccount: [9532] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 3116,
-                                    "сustomer_addr1": "2709 Commerce Way",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Philadelphia",
-                                    "сustomer_state": "PA",
-                                    "сustomer_zip": "19154",
-                                    "сustomer_country": "US",
-                                }
-                            ],
-                            billingAccount: [
-                                {
-                                    "billingaccount_billingaccountid": 9532,
-                                    "billingaccount_billingaccountcustomer": 3116,
-                                    "billingaccount_addr1": "2709 Commerce Way",
-                                    "billingaccount_addr2": null,
-                                    "billingaccount_addr3": null,
-                                    "billingaccount_city": "Philadelphia",
-                                    "billingaccount_state": "PA",
-                                    "billingaccount_zip": "19154",
-                                    "billingaccount_country": "US"
-                                }
-                            ]
-                        },
-                    },
-                    "5967": {
-                        "subscriptionid": 5967,
-                        "subscriptioncustomer": 3515,
-
-                        "groupsIdValues": { 'сustomer': [3515], billingAccount: [] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 3515,
-                                    "сustomer_addr1": "Siemensstr.14",
-                                    "сustomer_addr2": "73066 Uhingen",
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": null,
-                                    "сustomer_state": null,
-                                    "сustomer_zip": null,
-                                    "сustomer_country": "DE",
-                                }
-                            ],
-                            billingAccount: []
-                        },
-                    },
-                    "504": {
-                        "subscriptionid": 504,
-                        "subscriptioncustomer": 11826,
-                        "groupsIdValues": { 'сustomer': [11826], billingAccount: [1404] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 11826,
-                                    "сustomer_addr1": "Via Nobel, 10 39 421 57",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Noventa di Piave",
-                                    "сustomer_state": "Venezia",
-                                    "сustomer_zip": "30020",
-                                    "сustomer_country": "IT",
-                                }
-                            ],
-                            billingAccount: [
-                                {
-                                    "billingaccount_billingaccountid": 1404,
-                                    "billingaccount_billingaccountcustomer": 11826,
-                                    "billingaccount_addr1": "Via Nobel, 10 39 421 57",
-                                    "billingaccount_addr2": null,
-                                    "billingaccount_addr3": null,
-                                    "billingaccount_city": "Noventa di Piave",
-                                    "billingaccount_state": "Venezia",
-                                    "billingaccount_zip": "30020",
-                                    "billingaccount_country": "IT"
-                                }
-                            ]
-                        },
-                    },
-                    "6016": {
-                        "subscriptionid": 6016,
-                        "subscriptioncustomer": 11826,
-
-                        "groupsIdValues": { 'сustomer': [11826], billingAccount: [1404] },
-                        "groupedData": {
-                            'сustomer': [
-                                {
-                                    "сustomer_subscriptioncustomerid": 11826,
-                                    "сustomer_addr1": "Via Nobel, 10 39 421 57",
-                                    "сustomer_addr2": null,
-                                    "сustomer_addr3": null,
-                                    "сustomer_city": "Noventa di Piave",
-                                    "сustomer_state": "Venezia",
-                                    "сustomer_zip": "30020",
-                                    "сustomer_country": "IT",
-                                }
-                            ],
-                            billingAccount: [
-                                {
-                                    "billingaccount_billingaccountid": 1404,
-                                    "billingaccount_billingaccountcustomer": 11826,
-                                    "billingaccount_addr1": "Via Nobel, 10 39 421 57",
-                                    "billingaccount_addr2": null,
-                                    "billingaccount_addr3": null,
-                                    "billingaccount_city": "Noventa di Piave",
-                                    "billingaccount_state": "Venezia",
-                                    "billingaccount_zip": "30020",
-                                    "billingaccount_country": "IT"
-                                }
-                            ]
-                        },
-                    }
-                }
-            )
+    describe('groupSQLJoinedDataNotSorted function tests', () => {
+        it('it should correctly group joined SQL data (case 1 - real data)...', () => {
+            const groupedData = groupSQLJoinedDataNotSorted(testSubscriptionsData1, groupsData1);
+            expect(groupedData).toEqual(unorderedObjectData1);
         });
     });
 
+    describe('groupSQLJoinedDataSortedArray function tests', () => {
+        it('it should correctly group joined SQL data and present it as array (case 1 - real data)...', () => {
+            const groupedData = groupSQLJoinedDataSortedArray(testSubscriptionsData1, groupsData1);
+            expect(groupedData).toEqual(orderedArrayData1);
+        });
+    });
+
+    describe('groupSQLJoinedOrderedDataAsArray function tests', () => {
+        it('it should correctly group joined SQL data and present it as array without service data (case 1 - real data, normal version) ...', () => {
+            const groupedData = groupSQLJoinedOrderedDataAsArray(testSubscriptionsData1, groupsData1, false);
+            expect(groupedData).toEqual(orderedArrayData1);
+        });
+
+        it('it should correctly group joined SQL data and present it as array without service data (case 1 - real data, light version) ...', () => {
+            const groupedData = groupSQLJoinedOrderedDataAsArray(testSubscriptionsData1, groupsData1, true);
+            expect(groupedData).toEqual(orderedArrayData1WithoutServiceInfo);
+        });
+    });
 });

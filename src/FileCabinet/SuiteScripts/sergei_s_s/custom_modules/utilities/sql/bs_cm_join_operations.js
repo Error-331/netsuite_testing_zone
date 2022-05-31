@@ -220,7 +220,20 @@ define(['./../bs_cm_general_utils'],
             if (lightVersion) {
                 for (const dataRow of rawData) {
                     delete dataRow.orderId;
+                    delete dataRow.groupsIdValues;
+
+                    for (const groupName in dataRow.groupedData) {
+                        const groupData = dataRow.groupedData[groupName];
+
+                        if (!isNullOrEmpty(groupData)) {
+                            dataRow[groupName] = groupData;
+                        }
+                    }
+
+                    delete dataRow.groupedData;
                 }
+
+                return rawData;
             } else {
                 return rawData;
             }
