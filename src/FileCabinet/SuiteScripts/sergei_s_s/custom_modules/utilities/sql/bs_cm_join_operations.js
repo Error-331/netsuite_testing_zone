@@ -214,22 +214,34 @@ define(['./../bs_cm_general_utils'],
             return groupSQLJoinedData(dataRows, groupsData).groupsDataResultArray;
         }
 
-        function groupSQLJoinedOrderedDataAsArray(dataRows, groupsData, lightVersion = false) {
+        function groupSQLJoinedOrderedDataAsArray(dataRows, groupsData, options = {}) {
+            // prepare options
+            let {
+                lightVersion = false,
+                oneToMany,
+            } = options;
+
+            lightVersion = lightVersion ?? false;
+            oneToMany = oneToMany ?? true;
+
             const rawData = groupSQLJoinedData(dataRows, groupsData).groupsDataResultArray;
 
             if (lightVersion) {
                 for (const dataRow of rawData) {
-                    delete dataRow.orderId;
-                    delete dataRow.groupsIdValues;
-
                     for (const groupName in dataRow.groupedData) {
                         const groupData = dataRow.groupedData[groupName];
 
                         if (!isNullOrEmpty(groupData)) {
-                            dataRow[groupName] = groupData;
+                            if (oneToMany) {
+                                dataRow[groupName] = groupData;
+                            } else {
+                                dataRow[groupName] = groupData[0];
+                            }
                         }
                     }
 
+                    delete dataRow.orderId;
+                    delete dataRow.groupsIdValues;
                     delete dataRow.groupedData;
                 }
 

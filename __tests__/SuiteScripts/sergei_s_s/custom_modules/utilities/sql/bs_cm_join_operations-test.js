@@ -14,6 +14,7 @@ const {
     unorderedObjectData1,
     orderedArrayData1,
     orderedArrayData1WithoutServiceInfo,
+    orderedArrayData1WithoutServiceInfoNotOtM,
 } = require('./bs_cm_join_operations_tests_data');
 
 describe('Custom modules / utilities / sql / join operations', () => {
@@ -222,14 +223,19 @@ describe('Custom modules / utilities / sql / join operations', () => {
     });
 
     describe('groupSQLJoinedOrderedDataAsArray function tests', () => {
-        it('it should correctly group joined SQL data and present it as array without service data (case 1 - real data, normal version) ...', () => {
-            const groupedData = groupSQLJoinedOrderedDataAsArray(testSubscriptionsData1, groupsData1, false);
+        it('it should correctly group joined SQL data and present it as array without service data (case 1 - real data, regular version) ...', () => {
+            const groupedData = groupSQLJoinedOrderedDataAsArray(testSubscriptionsData1, groupsData1, { lightVersion: false });
             expect(groupedData).toEqual(orderedArrayData1);
         });
 
-        it('it should correctly group joined SQL data and present it as array without service data (case 1 - real data, light version) ...', () => {
-            const groupedData = groupSQLJoinedOrderedDataAsArray(testSubscriptionsData1, groupsData1, true);
+        it('it should correctly group joined SQL data and present it as array without service data (case 1 - real data, light version, one-to-many) ...', () => {
+            const groupedData = groupSQLJoinedOrderedDataAsArray(testSubscriptionsData1, groupsData1, { lightVersion: true });
             expect(groupedData).toEqual(orderedArrayData1WithoutServiceInfo);
+        });
+
+        it('it should correctly group joined SQL data and present it as array without service data (case 1 - real data, light version, not one-to-many) ...', () => {
+            const groupedData = groupSQLJoinedOrderedDataAsArray(testSubscriptionsData1, groupsData1, { lightVersion: true, oneToMany: false });
+            expect(groupedData).toEqual(orderedArrayData1WithoutServiceInfoNotOtM);
         });
     });
 });

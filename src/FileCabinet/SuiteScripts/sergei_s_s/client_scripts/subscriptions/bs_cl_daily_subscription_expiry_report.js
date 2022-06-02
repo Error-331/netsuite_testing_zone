@@ -57,7 +57,7 @@ function(
             options += `<option value="${id}" ${(!isNullOrEmpty(selectedActionId) && toInt(selectedActionId) === id) ? 'selected' : ''}>${name}</option>`;
             return options;
         }, '');
-console.log('ff', note);
+
         const formHTML = `
             <form id="custpage_dispositionform" method="post" style="display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: stretch; align-content: flex-start;">
                 <div style="flex-basis: auto; flex-grow: 0; flex-shrink: 0; display: flex; flex-flow: row nowrap; justify-content: flex-start; align-items: center; align-content: flex-start;">

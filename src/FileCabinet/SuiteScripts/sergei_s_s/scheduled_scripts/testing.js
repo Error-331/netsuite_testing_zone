@@ -6,16 +6,26 @@ require([
         'N/query',
         'N/record',
         'N/search',
+        'N/format',
+        'N/runtime',
         'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_general_utils',
         'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_runtime_utils',
+        'SuiteScripts/sergei_s_s/custom_modules/aggregations/subscription/bs_cm_expired_subscription_for_salesrep',
+        'SuiteScripts/sergei_s_s/custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
+        'SuiteScripts/sergei_s_s/custom_modules/utilities/specific/bs_cm_daily_subscription_expiry_report_utils',
+    'SuiteScripts/sergei_s_s/custom_modules/aggregations/custom/bs_cm_disposition_action_list',
     ],
     /**
  * @param{search} search
  */
     (
-        query, record, search,
+        query, record, search, format, runtime,
         { isNullOrEmpty, isArray },
-        { getCurrentEmployeeId }
+        { getCurrentEmployeeId },
+        { loadExpSubsForSalesReps, loadExpSubsWithGroupedCustomers },
+        { upsertDisposition, loadExpiredNetworksWithDispositionData },
+        { prepareNoteHeader },
+        { loadDispositionActionNameById }
     ) => {
 
 
@@ -27,187 +37,56 @@ require([
          */
         const execute = (scriptContext) => {
 
-            const columnsData = {
-                id: 'subscriptionId',
-
-                groupPrefixDelimiter: '_',
-                groupIds: ['subscriptionCustomerId', 'billingAccountId'],
-                groupPrefixes: ['сustomer', 'billingAccount' ]
-            }
 
 
+            log.debug(loadDispositionActionNameById('2'));
 
-            let suiteQLQuery = `
-
-
-
-           `;
-
+//             const formattedDateString = format.format({ value: currentDate, type: format.Type.DATE });
 
             //   AND ROWNUM <= 50 // 143898
 
             // 142375
             // 123923
 
-           /* suiteQLQuery = `
-          
-SELECT EXTRACT( DAY FROM (CURRENT_DATE + 6) ) AS DateDiff from dual
-              SELECT (CURRENT_DATE + 121) - CURRENT_DATE  AS DateDiff from dual
-            `;*/
-
-            suiteQLQuery = `
-          
-              SELECT DISTINCT
-                Subscription.id AS subscriptionId,
-                Subscription.customer AS subscriptionCustomer,
-                
-                Subscription.startdate,
-                Subscription.enddate,
-                Subscription.nextrenewalstartdate,
-                Subscription.billingsubscriptionstatus,
-                
-                Subscription.custrecord_sub_network_admin,
-                Subscription.custrecord_sub_network_name,
-                Subscription.custrecord_sub_network_id,
-                Subscription.custrecord_bsn_type,
-                
-                SubscriptionCustomer.id AS customer_subscriptionCustomerId,         
-                
-                CustomerBillingAccount.id AS billingAccount_billingAccountId,
-                CustomerBillingAccount.customer AS billingAccount_billingAccountCustomer,
-                
-                CustomerSalesRep.entityid AS customer_salesrep, 
-
-                CustomerAddress.Addr1 As customer_Addr1,
-                CustomerAddress.Addr2 As customer_Addr2,
-                CustomerAddress.Addr3 As customer_Addr3,
-                CustomerAddress.City As customer_City,
-                CustomerAddress.State As customer_State,
-                CustomerAddress.Zip As customer_Zip,
-                CustomerAddress.Country As customer_Country,
-
-                CustomerBillingAccount.Addr1 As billingAccount_Addr1,
-                CustomerBillingAccount.Addr2 As billingAccount_Addr2,
-                CustomerBillingAccount.Addr3 As billingAccount_Addr3,
-                CustomerBillingAccount.City As billingAccount_City,
-                CustomerBillingAccount.State As billingAccount_State,
-                CustomerBillingAccount.Zip As billingAccount_Zip,
-                CustomerBillingAccount.Country As billingAccount_Country,
-              CASE 
-                WHEN Subscription.startdate <= CURRENT_DATE THEN 'F'
-                WHEN Subscription.startdate > CURRENT_DATE THEN 'T'
-                END AS startdate_infuture,
-                
-              CASE
-                WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
-                WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
-                END AS expdate,
-                
-              CASE
-                WHEN Subscription.startdate < CURRENT_DATE THEN CEIL((Subscription.enddate - CURRENT_DATE))
-                WHEN Subscription.startdate >= CURRENT_DATE THEN CEIL((Subscription.startdate - (Subscription.startdate - 1)))
-              END AS daystillexpdate
-              
-              FROM
-                Subscription
-              LEFT OUTER JOIN
-                Customer AS SubscriptionCustomer
-              ON
-                (SubscriptionCustomer.id = Subscription.customer)
-                 
-              LEFT OUTER JOIN
-              (
-                SELECT
-                    *
-                FROM
-                    BillingAccount
-                AS 
-                    CustomerBillingAccount
-                INNER JOIN
-                    EntityAddressbook AS SubscriptionCustomerBillingAccountJoin
-                ON
-                    (SubscriptionCustomerBillingAccountJoin.internalid = CustomerBillingAccount.billaddresslist)
-                INNER JOIN
-                    EntityAddress AS BillingAccountAddress
-                ON
-                    (BillingAccountAddress.nkey = SubscriptionCustomerBillingAccountJoin.AddressBookAddress)
-                AND
-                    (
-                        BillingAccountAddress.Addr1 IS NOT NULL OR
-                        BillingAccountAddress.Addr2 IS NOT NULL OR
-                        BillingAccountAddress.Addr3 IS NOT NULL OR
-                        BillingAccountAddress.City IS NOT NULL OR
-                        BillingAccountAddress.State IS NOT NULL OR
-                        BillingAccountAddress.Zip IS NOT NULL OR
-                        BillingAccountAddress.Country IS NOT NULL
-                    )    
-              )
-              AS
-                CustomerBillingAccount
-              ON
-                (CustomerBillingAccount.customer = SubscriptionCustomer.id)
-              LEFT OUTER JOIN
-                EntityAddressbook AS SubscriptionCustomerAddressBookJoin
-              ON
-                (SubscriptionCustomerAddressBookJoin.Entity = SubscriptionCustomer.id)
-              AND
-                (SubscriptionCustomerAddressBookJoin.defaultbilling = 'T')
-
-              LEFT OUTER JOIN
-                EntityAddress AS CustomerAddress
-              ON
-                (CustomerAddress.nkey = SubscriptionCustomerAddressBookJoin.AddressBookAddress)
-                
-              LEFT OUTER JOIN
-                employee AS CustomerSalesRep
-              ON
-                (CustomerSalesRep.id = SubscriptionCustomer.salesrep)
-
-              WHERE
-                (
-                        (
-                        Subscription.startdate < CURRENT_DATE 
-                        AND
-                        Subscription.enddate >= CURRENT_DATE 
-                        AND
-                        Subscription.billingsubscriptionstatus != 'TERMINATED'
-                        AND
-                        Subscription.enddate < CURRENT_DATE + 7
-                        ) 
-                    OR
-                        (
-                        Subscription.startdate >= CURRENT_DATE 
-                        AND
-                        Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                        AND
-                        Subscription.startdate < CURRENT_DATE + 7
-                        )
-                )
-              AND
-                CustomerSalesRep.entityid IS NOT NULL
-              
+      /*     const suiteQLQuery = `
+SELECT * FROM note WHERE ID=1461
             `;
 
+//569
 
-
-           // getCurrentEmployeeId();
-           // return;
-
-            const resultSet = query.runSuiteQL(
-                {
-                    query: suiteQLQuery,
-                }
-            );
-
-            log.debug('charge', resultSet.asMappedResults());
-
+           log.debug('pupu'); //1446 1447
+            log.debug(query.runSuiteQL({ query: suiteQLQuery }).asMappedResults())*/
 /*
-            const c = search.load({
-                type: 'charge',
-                id: 'customsearch_sb_renewal_charge_uni'
+
+            const objRecord = record.load({
+                type: 'note',
+                id: 1459,
+                isDynamic: false,
             });
 
-            log.debug('filters', JSON.stringify(c.filters))*/
+            log.debug(objRecord);*/
+
+
+          /*  const ss1 = search.create({
+                type: 'note',
+                filters: [
+                    search.createFilter({name: 'recordtype', operator: search.Operator.EQUALTO, values: '569'}),
+                ],
+                columns: [
+                    search.createColumn({name: 'recordtype'}),
+                ]
+            });*/
+
+
+
+
+            /*
+                        const c = search.load({
+                            type: 'charge',
+                            id: 'customsearch_sb_renewal_charge_uni'
+                        });
+
+                        log.debug('filters', JSON.stringify(c.filters))*/
 
             /*
 
