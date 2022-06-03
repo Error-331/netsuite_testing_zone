@@ -21,7 +21,7 @@ define([
         { formatDateForReport, prepareNoteHeader },
         { upsertDisposition, loadExpiredNetworksWithDispositionData },
         ) => {
-        const FIELDS_TO_IGNORE = ['networkid', 'employeename', 'datemodified', 'dispositionid'];
+        const FIELDS_TO_IGNORE = ['networkid', 'employeename', 'datemodified', 'dispositionid', 'actionid'];
         const SUBLIST_ID = 'networkslist';
 
         function createNetworksSublist(currentForm, networksList = []) {
@@ -50,6 +50,87 @@ define([
                     [ '5%', 70 ],
                     [ '60%', 70 ]
                 ],
+
+                columnStyles: [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+
+                    [
+                        {
+                            className: 'a.dispositionLink',
+                            style: `
+                                display: flex;
+                                box-sizing: border-box;
+                                
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                
+                                width: 100%;
+                                height: 100%;
+                                
+                                padding: 0px 5px 0px 5px;
+                                
+                                border-radius: 3px;
+                                
+                                text-decoration: none;
+                                box-shadow: rgba(0, 0, 0, 0.3) 0 0.1em 0.1em;
+                             `
+                        },
+
+                        {
+                            className: 'a.dispositionLink span',
+                            style: `
+                                display: block;
+                                
+                                flex-basis: auto; 
+                                flex-grow: 0; 
+                                flex-shrink: 0;
+
+                                font-size: 12px;
+                                font-weight: bold;
+                                
+                                text-shadow: rgba(0, 0, 0, 0.5) 0 -0.08em 0;
+                                text-decoration: none;
+
+                                color: white;
+                             `
+                        },
+
+                        {
+                            className: 'a.disposition',
+                            style: `
+                                background-image: linear-gradient(to right bottom, #1aff1a, #00e600 3%, #00b300) !important;
+                            `
+                        },
+
+                        {
+                            className: 'a.mergebuyer',
+                            style: `
+                                background-image: linear-gradient(to right bottom, #ffff1a, #e6e600 3%, #b3b300) !important;
+                            `
+                        },
+
+
+                        {
+                            className: 'a.nochanges',
+                            style: `
+                                background-image: linear-gradient(to right bottom, #ffffff, #e6e6e6 3%, #b3b3b3) !important;
+                            `
+                        },
+
+                        {
+                            className: 'a.escalate',
+                            style: `
+                                background-image: linear-gradient(to right bottom, #ff1a1a, #e60000 3%, #b30000) !important;
+                            `
+                        }
+                    ],
+                ],
+
                 ignoreFieldNames: FIELDS_TO_IGNORE,
                 customFieldHandlers: {
                     'Subscription records': (value) => {
@@ -80,10 +161,33 @@ define([
                     },
 
                     'Action': (value,  dataRow) => {
+                        const actionId = toInt(dataRow['actionid']);
                         const dataAttributes = `data-networkid=${dataRow['networkid']}`;
                         const label = isNullOrEmpty(value) ? 'No changes' : value;
 
-                        return `<a ${dataAttributes} href="#" class="custpage_actionbtn" style="white-space: nowrap;">${label}</a>`;
+                        let actionClass = '';
+
+                        switch (actionId) {
+                            case 1:
+                                actionClass = 'disposition';
+                                break;
+                            case 2:
+                                actionClass = 'mergebuyer';
+                                break;
+                            case 3:
+                                actionClass = 'nochanges';
+                                break;
+                            case 4:
+                                actionClass = 'escalate';
+                                break;
+                            default:
+                                actionClass = 'nochanges';
+                                break;
+                        }
+
+                        return `<a ${dataAttributes}  href="#" class="custpage_actionbtn dispositionLink ${actionClass}" style="white-space: nowrap;">
+                                    <span ${dataAttributes} class="custpage_actionbtn">${label}</span>
+                                </a>`;
                     },
 
                     'CS Team Notes': (value, dataRow) => {

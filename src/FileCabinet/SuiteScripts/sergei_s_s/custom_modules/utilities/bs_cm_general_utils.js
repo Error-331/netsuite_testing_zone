@@ -3,6 +3,10 @@
  */
 define([],
     () => {
+        const isString = (input) => {
+            return typeof input === 'string';
+        }
+
         const isArray = (input) => {
             return (
                 input instanceof Array ||
@@ -18,12 +22,24 @@ define([],
             return false;
         };
 
+        const isObject = (input) => {
+            if (isNil(input)) {
+                return false;
+            } else if (isArray(input)) {
+                return false;
+            } else if (typeof input === 'object') {
+                return true;
+            } else {
+                return false;
+            }
+        };
+
         const isNullOrEmpty = (value) => {
             if (isNil(value)) {
                 return true;
             }
 
-            if (typeof value === 'string') {
+            if (isString(value)) {
                 return value.length === 0;
             } else if (isArray(value)) {
                 return value.length === 0;
@@ -93,8 +109,10 @@ define([],
         };
 
         return {
+            isString,
             isArray,
             isNil,
+            isObject,
             isNullOrEmpty,
             defaultTo,
             logExecution,

@@ -6,10 +6,10 @@ define([
         './../bs_cm_general_utils',
     ],
     
-    (serverWidget, { isNullOrEmpty }) => {
-        function composeStyleForSublistColumn(cellStyle, sublistId, columnNum) {
+    (serverWidget, { isString, isArray,  isObject, isNullOrEmpty }) => {
+        function composeStyleForSublistColumn(cellStyle, sublistId, columnNum, className = null) {
             return `
-                    table#${sublistId}_splits tr td:nth-child(${columnNum}).uir-list-row-cell 
+                    table#${sublistId}_splits tr td:nth-child(${columnNum}).uir-list-row-cell ${ isNullOrEmpty(className) ? ' ' : className }
                         ${typeof cellStyle === 'object' ? JSON.stringify(cellStyle) : '{' + cellStyle + '}'}
                     
                 `;
@@ -48,6 +48,7 @@ define([
                 fieldTypes,
                 ignoreFieldNames = [],
                 columnDimensions = [],
+                columnStyles = [],
                 customFieldHandlers = {},
                 container,
             } = options;
@@ -139,10 +140,10 @@ define([
                 cssRules += composeStyleForSublistColumn(`
                     width: ${preparedWidth} !important;
                     height: ${preparedHeight} !important;
-                `, id, `n+${colDimCnt + 1}`);
+                `, id, `${colDimCnt + 1}`);
             }
 
-            const $inlineHTML = $form.addField({
+            let $inlineHTML = $form.addField({
                 id: `custpage_sublist_${rawId}_custom_styles345`,
                 type: serverWidget.FieldType.INLINEHTML,
                 label: ' '
@@ -153,6 +154,40 @@ define([
             $inlineHTML.updateLayoutType({
                 layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
             });
+
+            // add custom styles to columns
+            cssRules = '';
+
+            for (let colStyleCnt = 0; colStyleCnt < columnStyles.length; colStyleCnt++) {
+                const columnStyle = columnStyles[colStyleCnt];
+
+                if (isNullOrEmpty(columnStyle)) {
+                    continue;
+                } else if (isString(columnStyle)) {
+                    cssRules += composeStyleForSublistColumn(columnStyle , id, `${colStyleCnt + 1}`);
+                } else if (isObject(columnStyle)) {
+                    const { className, style } = columnStyle;
+                    cssRules += composeStyleForSublistColumn(style, id, `${colStyleCnt + 1}`, className);
+                } else if (isArray(columnStyle)) {
+                    for (const columnSubStyles of columnStyle) {
+                        const { className, style } = columnSubStyles;
+                        cssRules += composeStyleForSublistColumn(style, id, `${colStyleCnt + 1}`, className);
+                    }
+                }
+            }
+
+            $inlineHTML = $form.addField({
+                id: `custpage_sublist_${rawId}_custom_styles345yrty`,
+                type: serverWidget.FieldType.INLINEHTML,
+                label: ' '
+            });
+
+            $inlineHTML.defaultValue = `<style>${cssRules}</style>`;
+
+            $inlineHTML.updateLayoutType({
+                layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
+            });
+
 
             // return sublist object
             return $sublist;

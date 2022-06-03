@@ -127,6 +127,7 @@ define([
                     'networkid': dataRow['custrecord_sub_network_id'],
                     'datemodified': dataRow['custrecorddate_modified'],
                     'dispositionid': dataRow['custrecord_id'],
+                    'actionid': dataRow['custrecordaction'],
                 })
             );
 // 23 // 10
