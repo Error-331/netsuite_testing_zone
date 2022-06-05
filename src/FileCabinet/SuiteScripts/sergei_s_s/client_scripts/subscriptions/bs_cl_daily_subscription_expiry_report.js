@@ -9,6 +9,7 @@ define([
      './../../custom_modules/aggregations/custom/bs_cm_disposition_action_list',
     './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
     './../../custom_modules/utilities/ui/bs_cm_c_ui_dialogbox',
+    './../../custom_modules/utilities/specific/bs_cm_daily_subscription_expiry_report_utils',
     './../../custom_modules/utilities/bs_cm_general_utils',
 ],
 /**
@@ -22,10 +23,13 @@ function(
     { loadDispositionActionForSelect },
     { loadExpiredNetworksWithDispositionDataByNetwork },
     { showLoadingDialog },
+    { prepareNoteHeader },
     { isNullOrEmpty, toInt },
 ) {
     // state variables
     let $actionButtons;
+    let $notesSections;
+    let $moreLinks;
 
     let expiredNetworks;
     let dispositionActions;
@@ -34,6 +38,36 @@ function(
     function onActionButtonClick({ target }) {
         const networkId = target.dataset.networkid;
         showEditDialog(networkId, expiredNetworks[networkId].custrecordnote, expiredNetworks[networkId].custrecordaction);
+    }
+
+    function onMoreLinkClick(event) {
+        event.preventDefault();
+
+        const $parent = event.target.parentElement;
+        let networkId = $parent.dataset.networkid
+
+        if (isNullOrEmpty(networkId)) {
+            return;
+        }
+
+        networkId = toInt(networkId);
+        const networkData = expiredNetworks[networkId];
+
+        if (isNullOrEmpty(networkData) || isNullOrEmpty(networkData['custrecordnote'])){
+            return
+        }
+
+        if (event.target.dataset.more === 'T') {
+            event.target.previousSibling.innerHTML = networkData['custrecordnote'];
+            event.target.innerHTML = '(less...)';
+
+            event.target.dataset.more = 'F';
+        } else {
+            event.target.previousSibling.innerHTML = `${networkData['custrecordnote'].substring(0, 200)}...`;
+            event.target.innerHTML = '(more...)';
+
+            event.target.dataset.more = 'T';
+        }
     }
 
     function onDispositionFormSubmitClick() {
@@ -46,9 +80,38 @@ function(
         dispositionActions = loadDispositionActionForSelect();
     }
 
+    function addCSNotes() {
+        $notesSections.forEach($noteSection => {
+            let networkId = $noteSection.dataset.networkid;
+
+            if (!isNullOrEmpty(networkId)) {
+                networkId = toInt(networkId);
+                const networkData = expiredNetworks[networkId];
+
+                if (!isNullOrEmpty(networkData) && !isNullOrEmpty(networkData['custrecordnote'])){
+                    const noteHeader = `<span>${prepareNoteHeader(networkData['custrecorddate_modified'], networkData['actionname'], networkData['employeename'])} | </span>`;
+                    const notes = networkData['custrecordnote'];
+
+                    const linksMore = `<a href="#" data-type="morelink" data-more="T">(more...)</a>`
+                    const linkToNotes = `<a target="_blank" class="noteslink" href="/app/common/custom/custrecordentry.nl?rectype=569&id=${networkData['custrecord_id']}">Notes</a>`;
+
+                    $noteSection.innerHTML = (notes.length) > 200 ? `${noteHeader}<span>${notes.substring(0, 200)}...</span>${linksMore}${linkToNotes}` : `${noteHeader}${notes}${linkToNotes}`;
+                } else {
+                    $noteSection.innerHTML = ' ';
+                }
+            }
+
+
+        });
+    }
+
     function bindActions() {
         $actionButtons.forEach($actionButton => {
             $actionButton.addEventListener('click', onActionButtonClick);
+        });
+
+        $moreLinks.forEach($moreLink => {
+            $moreLink.addEventListener('click', onMoreLinkClick);
         });
     }
 
@@ -105,7 +168,13 @@ function(
     function pageInit(scriptContext) {
         const hideLoadingDialog = showLoadingDialog(() => {
             $actionButtons = document.querySelectorAll('.custpage_actionbtn');
+            $notesSections = document.querySelectorAll('section[data-sectiontype="cs_team_notes"]');
+
             loadData();
+            addCSNotes();
+
+            $moreLinks = document.querySelectorAll('a[data-type="morelink"]');
+
             bindActions();
             hideLoadingDialog();
         });

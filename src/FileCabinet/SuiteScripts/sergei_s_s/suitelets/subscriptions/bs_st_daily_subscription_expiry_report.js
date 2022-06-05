@@ -129,6 +129,15 @@ define([
                             `
                         }
                     ],
+
+                    {
+                        className: 'a.noteslink',
+                        style: `
+                            display: block; 
+                            text-align: center; 
+                            margin-top: 20px;
+                        `
+                    }
                 ],
 
                 ignoreFieldNames: FIELDS_TO_IGNORE,
@@ -136,7 +145,7 @@ define([
                     'Subscription records': (value) => {
                         let links = ''
                         for (const { subscription_subscriptionid } of value) {
-                            links += `<a href="/app/accounting/subscription/subscription.nl?id=${subscription_subscriptionid}">${subscription_subscriptionid}</a><br/>`
+                            links += `<a target="_blank" href="/app/accounting/subscription/subscription.nl?id=${subscription_subscriptionid}">${subscription_subscriptionid}</a><br/>`
                         }
 
                         return links;
@@ -191,15 +200,17 @@ define([
                     },
 
                     'CS Team Notes': (value, dataRow) => {
-                        if (!isNullOrEmpty(value)) {
+                        return `<section data-sectiontype='cs_team_notes' data-networkid=${dataRow['networkid']}>Loading...</section>`
+
+                       /* if (!isNullOrEmpty(value)) {
                             const noteHeader = prepareNoteHeader(dataRow['datemodified'], dataRow['Action'], dataRow['employeename']);
                             value = `${noteHeader} | ${value}`;
 
-                            const linkToNotes = `<a style="display: block; text-align: center; margin-top: 20px" href="/app/common/custom/custrecordentry.nl?rectype=569&id=${dataRow['dispositionid']}">Notes</a>`;
+                            const linkToNotes = `<a target="_blank" class="noteslink" href="/app/common/custom/custrecordentry.nl?rectype=569&id=${dataRow['dispositionid']}">Notes</a>`;
                             return (value.length + linkToNotes.length) > 300 ? `${value.substring(0, 297 - linkToNotes.length)}...${linkToNotes}` : `${value}${linkToNotes}`;
                         } else {
                             return ' ';
-                        }
+                        }*/
                     }
                 },
             }, networksList, currentForm);
