@@ -21,7 +21,7 @@ define([
         { formatDateForReport, prepareNoteHeader },
         { upsertDisposition, loadExpiredNetworksWithDispositionData },
         ) => {
-        const FIELDS_TO_IGNORE = ['networkid', 'employeename', 'datemodified', 'dispositionid', 'actionid'];
+        const FIELDS_TO_IGNORE = ['networkid', 'employeename', 'dispositionid', 'actionid'];
         const SUBLIST_ID = 'networkslist';
 
         function createNetworksSublist(currentForm, networksList = []) {
@@ -37,6 +37,8 @@ define([
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
+                    serverWidget.FieldType.DATE,
+                    serverWidget.FieldType.DATE,
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT
                 ],
@@ -47,8 +49,10 @@ define([
                     [ '8%', 70 ],
                     [ '10%', 70 ],
                     [ '10%', 70 ],
+                    [ '10%', 70 ],
+                    [ '10%', 70 ],
                     [ '5%', 70 ],
-                    [ '60%', 70 ]
+                    [ '40%', 70 ]
                 ],
 
                 columnStyles: [
@@ -56,6 +60,35 @@ define([
                     null,
                     null,
                     null,
+                    null,
+                    (value) => {
+                        let expDate = value?.[0]?.['subscription_expdate'];
+                        expDate = isNullOrEmpty(expDate) ? null : formatDateForReport(expDate);
+
+                        return [
+                            {
+                                style: `
+                                    --expdate: '${expDate}';
+                                    position: relative;
+                                `
+                            },
+                            {
+                                className: ':after',
+                                style: `
+                                    content: var(--expdate);
+                                
+                                    width: 100%;
+                                    height: 100%;
+
+                                    display: block;
+                                    position: absolute;
+                                  
+                                    top: 0px;
+                                    background-color: inherit;
+                                `
+                            }
+                        ]
+                    },
                     null,
 
                     [
@@ -168,6 +201,13 @@ define([
 
                         return strRows;
                     },
+
+                    'Earliest expiration': (value) => {
+                        const expDate = value?.[0]?.['subscription_expdate'];
+                        return isNullOrEmpty(expDate) ? null : expDate;
+                    },
+
+                    'Last update': (value) => isNullOrEmpty(value) ? null : value,
 
                     'Action': (value,  dataRow) => {
                         const actionId = toInt(dataRow['actionid']);

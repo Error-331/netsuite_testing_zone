@@ -24,8 +24,13 @@ define([],
             return objectsArray;
         }
 
+        function difference(firstArray, secondArray) {
+            return firstArray.filter(field => !secondArray.includes(field));
+        }
+
         return {
             findIdxInObjectsArrayByKeyValue,
             removeFieldsFromObjectsArray,
+            difference,
         }
     });

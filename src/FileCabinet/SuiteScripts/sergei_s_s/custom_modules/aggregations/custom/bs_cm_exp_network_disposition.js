@@ -121,11 +121,12 @@ define([
                     'Subscription records': dataRow.groupedData['subscription'],
                     'Subscription Record Expire Date': dataRow.groupedData['subscription'],
                     'Renewal Email Date': dataRow.groupedData['subscription'],
+                    'Earliest expiration': dataRow.groupedData['subscription'],
+                    'Last update': dataRow['custrecorddate_modified'],
                     'Action': dataRow['actionname'],
                     'CS Team Notes': dataRow['custrecordnote'],
                     'employeename': dataRow['employeename'],
                     'networkid': dataRow['custrecord_sub_network_id'],
-                    'datemodified': dataRow['custrecorddate_modified'],
                     'dispositionid': dataRow['custrecord_id'],
                     'actionid': dataRow['custrecordaction'],
                 })

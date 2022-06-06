@@ -34,6 +34,10 @@ define([],
             }
         };
 
+        const isFunction = (input) => {
+            return typeof input === 'function';
+        };
+
         const isNullOrEmpty = (value) => {
             if (isNil(value)) {
                 return true;
@@ -113,6 +117,7 @@ define([],
             isArray,
             isNil,
             isObject,
+            isFunction,
             isNullOrEmpty,
             defaultTo,
             logExecution,
