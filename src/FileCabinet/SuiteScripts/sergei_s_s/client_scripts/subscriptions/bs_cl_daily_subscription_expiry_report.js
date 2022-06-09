@@ -92,7 +92,7 @@ function(
                     const noteHeader = `<span>${prepareNoteHeader(networkData['custrecorddate_modified'], networkData['actionname'], networkData['employeename'])} | </span>`;
                     const notes = networkData['custrecordnote'];
 
-                    const linksMore = `<a href="#" data-type="morelink" data-more="T">(more...)</a>`
+                    const linksMore = `<a href="#" data-type="morelink" class="moreLink" data-more="T">(more...)</a>`
                     const linkToNotes = `<a target="_blank" class="noteslink" href="/app/common/custom/custrecordentry.nl?rectype=569&id=${networkData['custrecord_id']}">Notes -></a>`;
 
                     $noteSection.innerHTML = (notes.length) > 200 ? `${noteHeader}<span>${notes.substring(0, 200)}...</span>${linksMore}${linkToNotes}` : `${noteHeader}${notes}${linkToNotes}`;
@@ -173,8 +173,17 @@ function(
 
             $moreLinks = document.querySelectorAll('a[data-type="morelink"]');
 
-            document.querySelectorAll('tr td.uir-list-row-cell:nth-child(6)').forEach(child => {
-                child.style.setProperty('--expdate',`"${formatDateForReport(child.innerHTML)}"`);
+            document.querySelectorAll('tr td.uir-list-row-cell:nth-child(3) section[data-sectiontype="subcription_records"]').forEach($child => {
+                let links = ''
+                for (const { subscription_subscriptionid } of expiredNetworks[$child.dataset.networkid].groupedData.subscription) {
+                    links += `<a target="_blank" href="/app/accounting/subscription/subscription.nl?id=${subscription_subscriptionid}">${subscription_subscriptionid}</a><br/>`
+                }
+
+                $child.innerHTML = links;
+            });
+
+            document.querySelectorAll('tr td.uir-list-row-cell:nth-child(6)').forEach($child => {
+                $child.style.setProperty('--expdate',`"${formatDateForReport($child.innerHTML)}"`);
             });
 
             bindActions();

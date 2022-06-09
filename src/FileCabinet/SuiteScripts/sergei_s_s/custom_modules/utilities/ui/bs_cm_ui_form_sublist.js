@@ -3,12 +3,18 @@
  */
 define([
         'N/ui/serverWidget',
+        './bs_cm_ui_form',
         './../bs_cm_array_utils',
         './../bs_cm_general_utils',
     ],
     
-    (serverWidget, { difference }, { isString, isArray,  isObject, isFunction, isNullOrEmpty }) => {
-        function composeStyleForSublistCell(cellStyle, sublistId, rowNum, columnNum, className = null) {
+    (
+        serverWidget,
+        { addStylesField },
+        { difference },
+        { isString, isArray,  isObject, isFunction, isNullOrEmpty }
+    ) => {
+        function composeStyleForSublistCell(cellStyle, className, sublistId, columnNum, rowNum) {
             return `
                     table#${sublistId}_splits tr:nth-child(${rowNum}) td:nth-child(${columnNum}).uir-list-row-cell${ isNullOrEmpty(className) ? ' ' : (className[0] === ':' ? className : ` ${className}`) }
                         ${typeof cellStyle === 'object' ? JSON.stringify(cellStyle) : '{' + cellStyle + '}'}
@@ -16,20 +22,34 @@ define([
                 `;
         }
 
-        function composeStyleForSublistColumn(cellStyle, sublistId, columnNum, className = null) {
+        function composeStyleForSublistColumn(cellStyle, className, sublistId, columnNum) {
             return `
-                    table#${sublistId}_splits tr td:nth-child(${columnNum}).uir-list-row-cell ${ isNullOrEmpty(className) ? ' ' : className }
+                    table#${sublistId}_splits tr td:nth-child(${columnNum}).uir-list-row-cell ${ isNullOrEmpty(className) ? ' ' : (className[0] === ':' ? className : ` ${className}`) }
                         ${typeof cellStyle === 'object' ? JSON.stringify(cellStyle) : '{' + cellStyle + '}'}
                     
                 `;
         }
 
-        function composeStyleForSublistRowColumn(cellStyle, sublistId, rowNum, columnNum) {
-            return `
-                    table#custpage_${sublistId}_splits tr:nth-child(${rowNum}) td:nth-child(${columnNum}).uir-list-row-cell {
-                        ${cellStyle}
-                    }
-                `;
+        function composeStyle(styleComposeFunc, id, computedStyles, ...params) {
+            if (isNullOrEmpty(computedStyles)) {
+                return '';
+            } else if (isString(computedStyles)) {
+                return styleComposeFunc(computedStyles, null, id, ...params);
+            } else if (isObject(computedStyles)) {
+                const { className, style } = computedStyles;
+                return styleComposeFunc(style, className, id, ...params);
+            } else if (isArray(computedStyles)) {
+                let cssRules = '';
+
+                for (const columnSubStyles of computedStyles) {
+                    const { className, style } = columnSubStyles;
+                    cssRules += styleComposeFunc(style, className, id, ...params);
+                }
+
+                return cssRules;
+            }
+
+            return '';
         }
 
         function addFormSublist(options, data, $form) {
@@ -149,116 +169,35 @@ define([
                 cssRules += composeStyleForSublistColumn(`
                     width: ${preparedWidth} !important;
                     height: ${preparedHeight} !important;
-                `, id, `${colDimCnt + 1}`);
+                `, null, id, `${colDimCnt + 1}`);
             }
 
-            let $inlineHTML = $form.addField({
-                id: `custpage_sublist_${rawId}_custom_styles345`,
-                type: serverWidget.FieldType.INLINEHTML,
-                label: ' '
-            });
-
-            $inlineHTML.defaultValue = `<style>${cssRules}</style>`;
-
-            $inlineHTML.updateLayoutType({
-                layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
-            });
-
             // add custom styles to columns
-            cssRules = '';
-
             const dataFieldNames = difference(fieldNames, ignoreFieldNames);
 
             for (let colStyleCnt = 0; colStyleCnt < columnStyles.length; colStyleCnt++) {
                 const columnStyle = columnStyles[colStyleCnt];
 
-                if (isNullOrEmpty(columnStyle)) {
-                    continue;
-                } else if (isFunction(columnStyle)) {
+                if (isFunction(columnStyle)) {
                     for (let rowCounter = 1; rowCounter <= data.length; rowCounter++) {
                         const dataRow = data[rowCounter - 1];
                         const fieldName = dataFieldNames[colStyleCnt - 1];
 
                         const computedStyles = columnStyle(dataRow[fieldName], dataRow);
-
-                        if (isNullOrEmpty(computedStyles)) {
-                            continue;
-                        } else if (isString(computedStyles)) {
-                            cssRules += composeStyleForSublistCell(computedStyles , id,  `${rowCounter + 1}`, `${colStyleCnt + 1}`);
-                        } else if (isObject(computedStyles)) {
-                            const { className, style } = computedStyles;
-                            cssRules += composeStyleForSublistCell(style , id,  `${rowCounter + 1}`, `${colStyleCnt + 1}`, className);
-                        } else if (isArray(computedStyles)) {
-                            for (const columnSubStyles of computedStyles) {
-                                const { className, style } = columnSubStyles;
-                                cssRules += composeStyleForSublistCell(style , id,  `${rowCounter + 1}`, `${colStyleCnt + 1}`, className);
-                            }
-                        }
+                        cssRules += composeStyle(composeStyleForSublistCell, id, computedStyles,`${colStyleCnt + 1}`, `${rowCounter + 1}`);
                     }
-                } else if (isString(columnStyle)) {
-                    cssRules += composeStyleForSublistColumn(columnStyle , id, `${colStyleCnt + 1}`);
-                } else if (isObject(columnStyle)) {
-                    const { className, style } = columnStyle;
-                    cssRules += composeStyleForSublistColumn(style, id, `${colStyleCnt + 1}`, className);
-                } else if (isArray(columnStyle)) {
-                    for (const columnSubStyles of columnStyle) {
-                        const { className, style } = columnSubStyles;
-                        cssRules += composeStyleForSublistColumn(style, id, `${colStyleCnt + 1}`, className);
-                    }
+                } else {
+                    cssRules += composeStyle(composeStyleForSublistColumn, id, columnStyle,`${colStyleCnt + 1}`);
                 }
             }
 
-            $inlineHTML = $form.addField({
-                id: `custpage_sublist_${rawId}_custom_styles345yrty`,
-                type: serverWidget.FieldType.INLINEHTML,
-                label: ' '
-            });
-
-            $inlineHTML.defaultValue = `<style>${cssRules}</style>`;
-
-            $inlineHTML.updateLayoutType({
-                layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
-            });
-
+            addStylesField($form, `sublist_${rawId}`, cssRules);
 
             // return sublist object
             return $sublist;
         }
 
-        function addStyleToSpecificSublistColumns(options, $form, style = '', rowColumnIds = []) {
-            const { sublistId, startRowNum, column } = options;
-
-            // compose css rule
-            const cssRule = composeStyleForSublistRowColumn(style, sublistId, `n+${startRowNum}`, column);
-
-            // insert hidden HTML field with styles
-            const $inlineHTML = $form.addField({
-                id: `custpage_sublist_${sublistId}_custom_styles`,
-                type: serverWidget.FieldType.INLINEHTML,
-                label: ' '
-            });
-
-            $inlineHTML.defaultValue = `<style>${cssRule}</style>`;
-
-            $inlineHTML.updateLayoutType({
-                layoutType: serverWidget.FieldLayoutType.OUTSIDEBELOW
-            });
-        }
-
-        function markSublistRowsInBoldRed(options, $form, rowColumnIds = []) {
-            const cellStyle = `
-                    color: red !important;
-                    font-weight: bold;
-                `;
-
-            addStyleToSpecificSublistColumns(options, $form, cellStyle, rowColumnIds)
-        }
-
         return {
             addFormSublist,
-
-            composeStyleForSublistRowColumn,
-            addStyleToSpecificSublistColumns,
-            markSublistRowsInBoldRed,
         }
     });

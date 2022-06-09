@@ -17,7 +17,7 @@ define([
         serverWidget,
         { isNullOrEmpty, toInt },
         { addFormSublist },
-        { getCurrentEmployeeId },
+        { getCurrentEmployeeId, getScriptURLPathQuery },
         { formatDateForReport, prepareNoteHeader },
         { upsertDisposition, loadExpiredNetworksWithDispositionData },
         ) => {
@@ -25,6 +25,8 @@ define([
         const SUBLIST_ID = 'networkslist';
 
         function createNetworksSublist(currentForm, networksList = []) {
+            const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
+
             return addFormSublist({
                 id: SUBLIST_ID,
                 title: 'Networks about to expire',
@@ -147,11 +149,24 @@ define([
                             `
                         },
 
+                        {
+                            className: 'a.mergebuyer span',
+                            style: `
+                                color: #363603;
+                            `
+                        },
 
                         {
                             className: 'a.nochanges',
                             style: `
                                 background-image: linear-gradient(to right bottom, #ffffff, #e6e6e6 3%, #b3b3b3) !important;
+                            `
+                        },
+
+                        {
+                            className: 'a.nochanges span',
+                            style: `
+                                color: #363603;
                             `
                         },
 
@@ -163,26 +178,34 @@ define([
                         }
                     ],
 
-                    {
-                        className: 'a.noteslink',
-                        style: `
-                            display: block; 
-                            text-align: center; 
-                            margin-top: 20px;
+                    [
+                        {
+                            className: 'a.noteslink',
+                            style: `
+                                display: block; 
+                                text-align: center; 
+                                margin-top: 20px;
                         `
-                    }
+                        },
+
+                        {
+                            className: 'a.moreLink',
+                            style: `
+                                padding-left: 10px;
+                            `
+                        },
+
+
+
+                    ],
+
+
                 ],
 
                 ignoreFieldNames: FIELDS_TO_IGNORE,
                 customFieldHandlers: {
-                    'Subscription records': (value) => {
-                        let links = ''
-                        for (const { subscription_subscriptionid } of value) {
-                            links += `<a target="_blank" href="/app/accounting/subscription/subscription.nl?id=${subscription_subscriptionid}">${subscription_subscriptionid}</a><br/>`
-                        }
-
-                        return links;
-                    },
+                    'Network name': (value) => `<a target="_blank" href="${urlToNetworkManagement}&bsn_email=${value}">${value}</a>`,
+                    'Subscription records': (value, dataRow) => `<section data-sectiontype='subcription_records' data-networkid=${dataRow['networkid']}>Loading...</section>`,
 
                     'Subscription Record Expire Date': (value) => {
                         let strRows = ''
@@ -241,16 +264,6 @@ define([
 
                     'CS Team Notes': (value, dataRow) => {
                         return `<section data-sectiontype='cs_team_notes' data-networkid=${dataRow['networkid']}>Loading...</section>`
-
-                       /* if (!isNullOrEmpty(value)) {
-                            const noteHeader = prepareNoteHeader(dataRow['datemodified'], dataRow['Action'], dataRow['employeename']);
-                            value = `${noteHeader} | ${value}`;
-
-                            const linkToNotes = `<a target="_blank" class="noteslink" href="/app/common/custom/custrecordentry.nl?rectype=569&id=${dataRow['dispositionid']}">Notes</a>`;
-                            return (value.length + linkToNotes.length) > 300 ? `${value.substring(0, 297 - linkToNotes.length)}...${linkToNotes}` : `${value}${linkToNotes}`;
-                        } else {
-                            return ' ';
-                        }*/
                     }
                 },
             }, networksList, currentForm);

@@ -26,7 +26,7 @@ define([
         { loadActiveSalesRepsNames, checkIfSalesSubordinate },
         { loadExpSubsForSalesReps },
         { getScriptURLPathQuery },
-        { addFormSublist, markSublistRowsInBoldRed },
+        { addFormSublist },
         { addFormSelectBox },
         { prepareCSVFileObject },
         { getNetworkTypeStrByTypeId },
@@ -169,14 +169,6 @@ define([
                 return currentForm;
             }
 
-            function addCustomStyling(currentForm) {
-                markSublistRowsInBoldRed({
-                    sublistId: SUBLIST_ID,
-                    startRowNum: 2,
-                    column: 4,
-                }, currentForm);
-            }
-
             function writePage(response, isSalesSubordinate, selectedSalesRepId, showSublist = false, selectedPeriod = PERIOD_1_WEEK) {
                 const currentForm = createForm(isSalesSubordinate, selectedSalesRepId, selectedPeriod);
 
@@ -192,9 +184,7 @@ define([
                     return;
                 }
 
-                //addCustomStyling(currentForm);
                 createSubscriptionsSublist(currentForm, subscriptionsList);
-
                 response.writePage(currentForm);
             }
 

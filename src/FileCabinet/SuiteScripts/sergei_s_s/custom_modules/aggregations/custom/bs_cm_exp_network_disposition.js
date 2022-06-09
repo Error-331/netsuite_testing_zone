@@ -131,7 +131,6 @@ define([
                     'actionid': dataRow['custrecordaction'],
                 })
             );
-// 23 // 10
         }
 
         function loadExpiredNetworksWithDispositionDataByNetwork() {
