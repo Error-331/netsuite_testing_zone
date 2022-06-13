@@ -161,7 +161,7 @@ define(['./../bs_cm_general_utils'],
             let orderId = 0;
 
             // find primary id raw column name
-            const idColumnNameInData = extractGroupIdsFromDataKeys(Object.keys(dataRows[0]), [idColumnName], groupPrefixDelimiter)[0];
+            const idColumnNameInData = extractGroupIdsFromDataKeys(Object.keys(dataRows[0]), [idColumnName], groupPrefixes, groupPrefixDelimiter)[0];
 
             // process data rows
             for (const dataRow of dataRows) {
