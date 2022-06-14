@@ -91,7 +91,34 @@ define([
                             }
                         ]
                     },
-                    null,
+
+                    (value) => {
+                        let expDate = isNullOrEmpty(value) ? '' : formatDateForReport(value);
+
+                        return [
+                            {
+                                style: `
+                                    --expdate: '${expDate}';
+                                    position: relative;
+                                `
+                            },
+                            {
+                                className: ':after',
+                                style: `
+                                    content: var(--expdate);
+                                
+                                    width: 100%;
+                                    height: 100%;
+
+                                    display: block;
+                                    position: absolute;
+                                  
+                                    top: 0px;
+                                    background-color: inherit;
+                                `
+                            }
+                        ]
+                    },
 
                     [
                         {

@@ -186,6 +186,12 @@ function(
                 $child.style.setProperty('--expdate',`"${formatDateForReport($child.innerHTML)}"`);
             });
 
+            document.querySelectorAll('tr td.uir-list-row-cell:nth-child(7)').forEach($child => {
+                if (!isNullOrEmpty($child.innerHTML) && $child.innerHTML !== '&nbsp;') {
+                    $child.style.setProperty('--expdate',`"${formatDateForReport($child.innerHTML)}"`);
+                }
+            });
+
             bindActions();
             hideLoadingDialog();
         });
