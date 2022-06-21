@@ -41,7 +41,7 @@ define([
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.DATE,
                     serverWidget.FieldType.DATE,
-                    serverWidget.FieldType.TEXT,
+                    serverWidget.FieldType.INTEGER,
                     serverWidget.FieldType.TEXT
                 ],
 
@@ -120,92 +120,109 @@ define([
                         ]
                     },
 
-                    [
-                        {
-                            className: 'a.dispositionLink',
-                            style: `
-                                display: flex;
-                                box-sizing: border-box;
-                                
-                                flex-direction: column;
-                                align-items: center;
-                                justify-content: center;
-                                
-                                width: 100%;
-                                height: 100%;
-                                
-                                padding: 0px 5px 0px 5px;
-                                
-                                border-radius: 3px;
-                                
-                                text-decoration: none;
-                                box-shadow: rgba(0, 0, 0, 0.3) 0 0.1em 0.1em;
-                             `
-                        },
+                    (value, dataRow) => {
+                        const actionId = isNullOrEmpty(dataRow['actionid']) ? 0 : toInt(dataRow['actionid']);
+                        const label = isNullOrEmpty(value) ? 'No changes' : value;
 
-                        {
-                            className: 'a.dispositionLink span',
-                            style: `
-                                display: block;
-                                
-                                flex-basis: auto; 
-                                flex-grow: 0; 
-                                flex-shrink: 0;
+                        let bgImage = '';
+                        let textColor = 'black';
 
-                                font-size: 12px;
-                                font-weight: bold;
-                                
-                                text-shadow: rgba(0, 0, 0, 0.5) 0 -0.08em 0;
-                                text-decoration: none;
-
-                                color: white;
-                             `
-                        },
-
-                        {
-                            className: 'a.disposition',
-                            style: `
-                                background-image: linear-gradient(to right bottom, #1aff1a, #00e600 3%, #00b300) !important;
-                            `
-                        },
-
-                        {
-                            className: 'a.mergebuyer',
-                            style: `
-                                background-image: linear-gradient(to right bottom, #ffff1a, #e6e600 3%, #b3b300) !important;
-                            `
-                        },
-
-                        {
-                            className: 'a.mergebuyer span',
-                            style: `
-                                color: #363603;
-                            `
-                        },
-
-                        {
-                            className: 'a.nochanges',
-                            style: `
-                                background-image: linear-gradient(to right bottom, #ffffff, #e6e6e6 3%, #b3b3b3) !important;
-                            `
-                        },
-
-                        {
-                            className: 'a.nochanges span',
-                            style: `
-                                color: #363603;
-                            `
-                        },
-
-                        {
-                            className: 'a.escalate',
-                            style: `
-                                background-image: linear-gradient(to right bottom, #ff1a1a, #e60000 3%, #b30000) !important;
-                            `
+                        switch (actionId) {
+                            case 1:
+                                bgImage = 'linear-gradient(to right bottom, #ffffff, #e6e6e6 3%, #b3b3b3)';
+                                break;
+                            case 2:
+                                bgImage = 'linear-gradient(to right bottom, #ffff1a, #e6e600 3%, #b3b300)';
+                                break;
+                            case 3:
+                                bgImage = 'linear-gradient(to right bottom, #1aff1a, #00e600 3%, #00b300)';
+                                textColor = 'white';
+                                break;
+                            case 4:
+                                bgImage = 'linear-gradient(to right bottom, #ff1a1a, #e60000 3%, #b30000)';
+                                textColor = 'white';
+                                break;
+                            default:
+                                bgImage = 'linear-gradient(to right bottom, #1aff1a, #00e600 3%, #00b300)';
+                                textColor = 'white';
+                                break;
                         }
-                    ],
+
+                        return [
+                            {
+                                style: `
+                                        --label: '${label}';
+                                        --bgImage: ${bgImage};
+                                        --textColor: ${textColor};
+                                        --action: ${actionId};
+                                        --network: ${dataRow['networkid']};
+                                      
+                                        position: relative;
+                                `
+                            },
+                            {
+                                className: ':before',
+                                style: `
+                                        content: '';
+                                        box-sizing: border-box;
+                                
+                                        width: 100%;
+                                        height: 100%;
+
+                                        display: block;
+                                        position: absolute;
+                                  
+                                        top: 0px;
+                                        left: 0px;
+
+                                        padding: 0px 5px 0px 5px;
+                                        border-radius: 3px;
+                                
+                                        text-decoration: none;
+                                        box-shadow: rgba(0, 0, 0, 0.3) 0 0.1em 0.1em;
+                                        
+                                        cursor: pointer;
+                                    
+                                        background-color: inherit;
+                                        background-image: var(--bgImage);     
+                                    `
+                            },
+
+                            {
+                                className: ':after',
+                                style: `
+                                        content: var(--label);
+
+                                        display: block;
+                                        position: absolute;
+                                        
+                                        width: 100%;
+                                  
+                                        top: calc(50% - 6px);
+                                        left: 0px;
+
+                                        font-size: 12px;
+                                        font-weight: bold;
+                                
+                                        text-shadow: rgba(0, 0, 0, 0.5) 0 -0.08em 0;
+                                        text-align: center;
+                                        text-decoration: none;
+                                        white-space: nowrap;
+                                        
+                                        cursor: pointer;
+                                        
+                                        color: var(--textColor);
+                                    `
+                            },
+                        ]
+                    },
 
                     [
+                        {
+                          style: `
+                                padding-left: 10px !important;
+                            `
+                        },
                         {
                             className: 'a.noteslink',
                             style: `
@@ -221,12 +238,7 @@ define([
                                 padding-left: 10px;
                             `
                         },
-
-
-
                     ],
-
-
                 ],
 
                 ignoreFieldNames: FIELDS_TO_IGNORE,
@@ -260,37 +272,12 @@ define([
                     'Last update': (value) => isNullOrEmpty(value) ? null : value,
 
                     'Action': (value,  dataRow) => {
-                        const actionId = toInt(dataRow['actionid']);
-                        const dataAttributes = `data-networkid=${dataRow['networkid']}`;
-                        const label = isNullOrEmpty(value) ? 'No changes' : value;
-
-                        let actionClass = '';
-
-                        switch (actionId) {
-                            case 1:
-                                actionClass = 'disposition';
-                                break;
-                            case 2:
-                                actionClass = 'mergebuyer';
-                                break;
-                            case 3:
-                                actionClass = 'nochanges';
-                                break;
-                            case 4:
-                                actionClass = 'escalate';
-                                break;
-                            default:
-                                actionClass = 'nochanges';
-                                break;
-                        }
-
-                        return `<a ${dataAttributes}  href="#" class="custpage_actionbtn dispositionLink ${actionClass}" style="white-space: nowrap;">
-                                    <span ${dataAttributes} class="custpage_actionbtn">${label}</span>
-                                </a>`;
+                        const actionId = isNullOrEmpty(dataRow['actionid']) ? 0 : toInt(dataRow['actionid']);
+                        return actionId;
                     },
 
                     'CS Team Notes': (value, dataRow) => {
-                        return `<section data-sectiontype='cs_team_notes' data-networkid=${dataRow['networkid']}>Loading...</section>`
+                        return `<section data-sectiontype='cs_team_notes' data-networkid=${dataRow['networkid']}>Loading...</section>`;
                     }
                 },
             }, networksList, currentForm);

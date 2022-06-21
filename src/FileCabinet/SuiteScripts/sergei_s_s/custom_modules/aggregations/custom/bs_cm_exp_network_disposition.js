@@ -36,6 +36,8 @@ define([
                     Subscription.custrecord_sub_network_name,
                     Subscription.custrecord_sub_network_id,
                     
+                    Subscription.billingsubscriptionstatus,
+                    
                     GroupedNetworkIds.subscriptionCnt,
                     
                     NetworkDisposition.id AS custrecord_id,
@@ -69,23 +71,28 @@ define([
                         Subscription 
                     WHERE
                     (
-                            (
-                            Subscription.startdate < CURRENT_DATE 
-                            AND
-                            Subscription.enddate >= CURRENT_DATE 
-                            AND
                             Subscription.billingsubscriptionstatus != 'TERMINATED'
                             AND
-                            Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
-                            ) 
-                        OR
                             (
-                            Subscription.startdate >= CURRENT_DATE 
-                            AND
-                            Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                            AND
-                            Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
+                                (
+                                Subscription.startdate < CURRENT_DATE 
+                                AND
+                                Subscription.enddate >= CURRENT_DATE 
+                                AND
+                                Subscription.billingsubscriptionstatus != 'TERMINATED'
+                                AND
+                                Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
+                                ) 
+                            OR
+                                (
+                                Subscription.startdate >= CURRENT_DATE 
+                                AND
+                                Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                                AND
+                                Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
+                                )
                             )
+                           
                     )         
                     GROUP BY 
                         Subscription.custrecord_sub_network_id  
@@ -107,7 +114,31 @@ define([
                 LEFT OUTER JOIN
                     employee AS LastEmployee
                 ON
-                    (NetworkDisposition.custrecordemployee_id = LastEmployee.id)                    
+                    (NetworkDisposition.custrecordemployee_id = LastEmployee.id)    
+                WHERE
+                    (
+                            Subscription.billingsubscriptionstatus != 'TERMINATED'
+                            AND
+                            (
+                                (
+                                Subscription.startdate < CURRENT_DATE 
+                                AND
+                                Subscription.enddate >= CURRENT_DATE 
+                                AND
+                                Subscription.billingsubscriptionstatus != 'TERMINATED'
+                                AND
+                                Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
+                                ) 
+                            OR
+                                (
+                                Subscription.startdate >= CURRENT_DATE 
+                                AND
+                                Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                                AND
+                                Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
+                                )
+                            )     
+                    )                       
            `;
 
             return query.runSuiteQL({ query: suiteQLQuery }).asMappedResults();

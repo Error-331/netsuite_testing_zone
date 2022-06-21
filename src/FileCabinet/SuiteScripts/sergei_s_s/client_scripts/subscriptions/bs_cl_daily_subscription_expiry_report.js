@@ -35,8 +35,10 @@ function(
     let dispositionActions;
 
     // DOM action handlers
-    function onActionButtonClick({ target }) {
-        const networkId = target.dataset.networkid;
+    function onActionButtonClick(event) {
+        event.stopPropagation();
+
+        const networkId = toInt(getComputedStyle(event.currentTarget).getPropertyValue('--network'));
         showEditDialog(networkId, expiredNetworks[networkId].custrecordnote, expiredNetworks[networkId].custrecordaction);
     }
 
@@ -93,7 +95,7 @@ function(
                     const notes = networkData['custrecordnote'];
 
                     const linksMore = `<a href="#" data-type="morelink" class="moreLink" data-more="T">(more...)</a>`
-                    const linkToNotes = `<a target="_blank" class="noteslink" href="/app/common/custom/custrecordentry.nl?rectype=569&id=${networkData['custrecord_id']}">Notes -></a>`;
+                    const linkToNotes = `<a target="_blank" class="noteslink" href="/app/common/custom/custrecordentry.nl?rectype=575&id=${networkData['custrecord_id']}">Notes -></a>`; // 569
 
                     $noteSection.innerHTML = (notes.length) > 200 ? `${noteHeader}<span>${notes.substring(0, 200)}...</span>${linksMore}${linkToNotes}` : `${noteHeader}${notes}${linkToNotes}`;
                 } else {
@@ -165,7 +167,7 @@ function(
      */
     function pageInit(scriptContext) {
         const hideLoadingDialog = showLoadingDialog(() => {
-            $actionButtons = document.querySelectorAll('.custpage_actionbtn');
+            $actionButtons = document.querySelectorAll('tr td.uir-list-row-cell:nth-child(8)');
             $notesSections = document.querySelectorAll('section[data-sectiontype="cs_team_notes"]');
 
             loadData();
@@ -190,6 +192,16 @@ function(
                 if (!isNullOrEmpty($child.innerHTML) && $child.innerHTML !== '&nbsp;') {
                     $child.style.setProperty('--expdate',`"${formatDateForReport($child.innerHTML)}"`);
                 }
+            });
+
+            $actionButtons.forEach($child => {
+                const compStyles = getComputedStyle($child)
+
+                $child.style.setProperty('--label', compStyles.getPropertyValue('--label'));
+                $child.style.setProperty('--bgImage', compStyles.getPropertyValue('--bgImage'));
+                $child.style.setProperty('--textColor', compStyles.getPropertyValue('--textColor'));
+                $child.style.setProperty('--action',compStyles.getPropertyValue('--action'));
+                $child.style.setProperty('--network', compStyles.getPropertyValue('--network'));
             });
 
             bindActions();
