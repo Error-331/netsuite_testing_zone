@@ -44,7 +44,19 @@ define([],
                 eq (value, rightBoundary);
         }
 
+        function calcPagesCount(elementsCount, pageSize) {
+            if (pageSize >= elementsCount) {
+                return 1;
+            }
 
+            const divisionReminder = elementsCount % pageSize;
+
+            if (divisionReminder > 0) {
+                return Math.floor(elementsCount / pageSize) + 1;
+            } else {
+                return elementsCount / pageSize;
+            }
+        }
 
         return {
             digitsCount,
@@ -54,5 +66,6 @@ define([],
             lte,
             gte,
             between,
+            calcPagesCount,
         }
     });

@@ -78,8 +78,18 @@ function(
 
     // business logic
     function loadData() {
-        expiredNetworks = loadExpiredNetworksWithDispositionDataByNetwork();
+        const queryParams = new URLSearchParams(window.location.search);
+        const page = queryParams.has('page') ? queryParams.get('page') : 0;
+        const pageSize = queryParams.has('pagesize') ? queryParams.get('pagesize') : 100;
+
+        expiredNetworks = loadExpiredNetworksWithDispositionDataByNetwork(page, pageSize);
         dispositionActions = loadDispositionActionForSelect();
+
+        if (isNullOrEmpty(expiredNetworks)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     function addCSNotes() {
@@ -167,17 +177,23 @@ function(
      */
     function pageInit(scriptContext) {
         const hideLoadingDialog = showLoadingDialog(() => {
+            const loadResult = loadData();
+
+            if (!loadResult) {
+                hideLoadingDialog();
+                return;
+            }
+
             $actionButtons = document.querySelectorAll('tr td.uir-list-row-cell:nth-child(8)');
             $notesSections = document.querySelectorAll('section[data-sectiontype="cs_team_notes"]');
 
-            loadData();
             addCSNotes();
 
             $moreLinks = document.querySelectorAll('a[data-type="morelink"]');
 
             document.querySelectorAll('tr td.uir-list-row-cell:nth-child(3) section[data-sectiontype="subcription_records"]').forEach($child => {
                 let links = ''
-                for (const { subscription_subscriptionid } of expiredNetworks[$child.dataset.networkid].groupedData.subscription) {
+                for (const subscription_subscriptionid of expiredNetworks[$child.dataset.networkid].subscriptionids.split(',')) {
                     links += `<a target="_blank" href="/app/accounting/subscription/subscription.nl?id=${subscription_subscriptionid}">${subscription_subscriptionid}</a><br/>`
                 }
 
@@ -190,7 +206,9 @@ function(
 
             document.querySelectorAll('tr td.uir-list-row-cell:nth-child(7)').forEach($child => {
                 if (!isNullOrEmpty($child.innerHTML) && $child.innerHTML !== '&nbsp;') {
-                    $child.style.setProperty('--expdate',`"${formatDateForReport($child.innerHTML)}"`);
+                    $child.style.setProperty('--lastupdatedate',`"${formatDateForReport($child.innerHTML)}"`);
+                } else {
+                    $child.style.setProperty('--lastupdatedate',' ');
                 }
             });
 

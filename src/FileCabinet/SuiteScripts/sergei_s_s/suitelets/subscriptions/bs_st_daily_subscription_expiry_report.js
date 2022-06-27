@@ -6,6 +6,7 @@ define([
         'N/ui/serverWidget',
         './../../custom_modules/utilities/bs_cm_general_utils',
         './../../custom_modules/utilities/ui/bs_cm_ui_form_sublist',
+        './../../custom_modules/utilities/ui/bs_cm_ui_form',
         './../../custom_modules/utilities/bs_cm_runtime_utils',
         './../../custom_modules/utilities/specific/bs_cm_daily_subscription_expiry_report_utils',
         './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
@@ -15,22 +16,24 @@ define([
  */
     (
         serverWidget,
-        { isNullOrEmpty, toInt },
+        { isNullOrEmpty, isString, toInt },
         { addFormSublist },
+        { createPagination },
         { getCurrentEmployeeId, getScriptURLPathQuery },
         { formatDateForReport, prepareNoteHeader },
-        { upsertDisposition, loadExpiredNetworksWithDispositionData },
+        { upsertDisposition, loadExpiredNetworksWithDispositionData, countExpiredNetworks },
         ) => {
         const FIELDS_TO_IGNORE = ['networkid', 'employeename', 'dispositionid', 'actionid'];
         const SUBLIST_ID = 'networkslist';
 
-        function createNetworksSublist(currentForm, networksList = []) {
+        function createNetworksSublist(currentForm, networksList = [], totalElements) {
             const urlToNetworkManagement = getScriptURLPathQuery('customscript_sb_bsnc_create_network', 'customdeploy_sb_bsnc_create_network');
 
             return addFormSublist({
                 id: SUBLIST_ID,
                 title: 'Networks about to expire',
                 label: 'networks',
+                total: totalElements,
                 showTotal: true,
                 showLineNumber: true,
                 fieldNames: Object.keys(networksList[0]),
@@ -64,7 +67,7 @@ define([
                     null,
                     null,
                     (value) => {
-                        let expDate = value?.[0]?.['subscription_expdate'];
+                        let expDate = value.split(',')[0];
                         expDate = isNullOrEmpty(expDate) ? null : formatDateForReport(expDate);
 
                         return [
@@ -93,19 +96,19 @@ define([
                     },
 
                     (value) => {
-                        let expDate = isNullOrEmpty(value) ? '' : formatDateForReport(value);
+                        let lastUpdateDate = isNullOrEmpty(value) ? '' : formatDateForReport(value);
 
                         return [
                             {
                                 style: `
-                                    --expdate: '${expDate}';
+                                    --lastupdatedate: '${lastUpdateDate}';
                                     position: relative;
                                 `
                             },
                             {
                                 className: ':after',
                                 style: `
-                                    content: var(--expdate);
+                                    content: var(--lastupdatedate);
                                 
                                     width: 100%;
                                     height: 100%;
@@ -243,13 +246,16 @@ define([
 
                 ignoreFieldNames: FIELDS_TO_IGNORE,
                 customFieldHandlers: {
-                    'Network name': (value) => `<a target="_blank" href="${urlToNetworkManagement}&bsn_email=${value}">${value}</a>`,
+                    'Network name': (value) => {
+                        const networkName = value.split(',')[0];
+                        return `<a target="_blank" href="${urlToNetworkManagement}&bsn_email=${networkName}">${networkName}</a>`
+                    },
                     'Subscription records': (value, dataRow) => `<section data-sectiontype='subcription_records' data-networkid=${dataRow['networkid']}>Loading...</section>`,
 
                     'Subscription Record Expire Date': (value) => {
                         let strRows = ''
-                        for (const { subscription_expdate } of value) {
-                            strRows += `${formatDateForReport(subscription_expdate)}<br/>`
+                        for (const expDate of value.split(',')) {
+                            strRows += `${formatDateForReport(expDate)}<br/>`
                         }
 
                         return strRows;
@@ -257,15 +263,15 @@ define([
 
                     'Renewal Email Date': (value) => {
                         let strRows = ''
-                        for (const { subscription_renewalemaildate } of value) {
-                            strRows += `${formatDateForReport(subscription_renewalemaildate)}<br/>`
+                        for (const renewalDate of value.split(',')) {
+                            strRows += `${formatDateForReport(renewalDate)}<br/>`
                         }
 
                         return strRows;
                     },
 
                     'Earliest expiration': (value) => {
-                        const expDate = value?.[0]?.['subscription_expdate'];
+                        const expDate = value.split(',')[0];
                         return isNullOrEmpty(expDate) ? null : expDate;
                     },
 
@@ -291,21 +297,32 @@ define([
             return currentForm;
         }
 
-        function writePage(response) {
+        function writePage(response, page = 0, pageSize = 100) {
             const currentForm = createForm();
             currentForm.clientScriptModulePath = './../../client_scripts/subscriptions/bs_cl_daily_subscription_expiry_report';
 
-            const networksList = loadExpiredNetworksWithDispositionData();
+            page = isString(page) ? toInt(page) : page;
+            pageSize = isString(pageSize) ? toInt(pageSize) : pageSize;
+
+            const networksList = loadExpiredNetworksWithDispositionData(page, pageSize);
 
             if (isNullOrEmpty(networksList)) {
                 response.writePage(currentForm);
                 return;
             }
 
-            //response.write(JSON.stringify(networksList));
-            //return
+            const totalElements = countExpiredNetworks();
 
-            createNetworksSublist(currentForm, networksList);
+           // response.write(JSON.stringify(networksList.length));
+           // return
+
+            createPagination({
+                page,
+                pageSize,
+                totalElements,
+            }, currentForm);
+
+            createNetworksSublist(currentForm, networksList, totalElements);
             response.writePage(currentForm);
         }
 
@@ -316,10 +333,13 @@ define([
                 custpage_networkid,
                 custpage_action,
                 custpage_note,
+
+                page,
+                pagesize,
             } = request.parameters;
 
             if (request.method === 'GET') {
-                writePage(response);
+                writePage(response, page, pagesize);
             } else if (request.method === 'POST') {
                 response.write(JSON.stringify({
                     custpage_networkid,
@@ -330,7 +350,7 @@ define([
                 const employeeId = getCurrentEmployeeId();
 
                 upsertDisposition(toInt(custpage_networkid), toInt(custpage_action), employeeId, custpage_note)
-                writePage(response);
+                writePage(response, page, pagesize);
             } else {
                 response.write('Wrong request method. Please open current suitelet using link.');
             }

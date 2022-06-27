@@ -71,6 +71,7 @@ define([
                 id,
                 title = '',
                 label = '',
+                total = null,
                 showTotal = false,
                 showLineNumber = false,
                 fieldNames,
@@ -84,7 +85,7 @@ define([
 
             const rawId = id;
             id = `custpage_${id}`;
-            label = showTotal ? `${label} (total: ${data.length})` : label;
+            label = showTotal ? `${label} (total: ${ isNullOrEmpty(total) ? data.length : total})` : label;
 
             // add sublist object
             const $sublist = $form.addSublist({

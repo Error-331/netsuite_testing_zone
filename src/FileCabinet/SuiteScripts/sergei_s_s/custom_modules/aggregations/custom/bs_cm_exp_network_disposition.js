@@ -7,6 +7,8 @@ define([
         './../../aggregations/custom/bs_cm_disposition_action_list',
         './../../utilities/sql/bs_cm_join_operations',
         './../../utilities/bs_cm_runtime_utils',
+        './../../utilities/bs_cm_math_utils',
+        './../../utilities/bs_cm_general_utils',
         './../../utilities/specific/bs_cm_daily_subscription_expiry_report_utils'
     ],
     /**
@@ -18,27 +20,72 @@ define([
         { loadDispositionActionNameById },
         { groupSQLJoinedDataNotSorted, groupSQLJoinedDataSortedArray },
         { getCurrentEmployeeName },
+        { calcPagesCount },
+        { isNullOrEmpty },
         { prepareNoteHeader }
     ) => {
         const EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING = {
             id: 'custrecord_sub_network_id',
 
             groupPrefixDelimiter: '_',
-            groupIds: ['subscriptionId'],
-            groupPrefixes: ['subscription']
+            groupIds: [],
+            groupPrefixes: []
+        };
+
+        const expiredNetworksQuery = `
+            SELECT
+                Subscription.custrecord_sub_network_id,
+                ROW_NUMBER() OVER (ORDER BY Subscription.custrecord_sub_network_id) AS rownumber
+            FROM 
+                Subscription                   
+            WHERE
+                Subscription.custrecord_sub_network_id IS NOT NULL
+            AND
+                Subscription.custrecord_sub_network_name IS NOT NULL
+            AND                    
+                (
+                        Subscription.billingsubscriptionstatus != 'TERMINATED'
+                    AND
+                        (
+                            (
+                                    Subscription.startdate < CURRENT_DATE 
+                                AND
+                                    Subscription.enddate >= CURRENT_DATE 
+                                AND
+                                    Subscription.billingsubscriptionstatus != 'TERMINATED'
+                                AND
+                                    Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
+                            ) 
+                    OR
+                            (
+                                    Subscription.startdate >= CURRENT_DATE 
+                                AND
+                                    Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                                AND
+                                    Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
+                            )
+                        )     
+                )    
+            GROUP BY
+                Subscription.custrecord_sub_network_id
+            ORDER BY
+                Subscription.custrecord_sub_network_id 
+        `;
+
+        function countExpiredNetworks() {
+            return query.runSuiteQL({ query: `SELECT COUNT(*) AS total FROM (${expiredNetworksQuery})` }).asMappedResults()[0].total;
         }
 
-
-        function loadExpiredNetworksWithDispositionDataRaw() {
+        function loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize) {
             const suiteQLQuery = `
                 SELECT
-                    Subscription.id AS subscription_subscriptionId,
-                    Subscription.custrecord_sub_network_name,
-                    Subscription.custrecord_sub_network_id,
+                    NetworkIds.custrecord_sub_network_id,
+                    NetworkIds.rownumber,
                     
-                    Subscription.billingsubscriptionstatus,
-                    
-                    GroupedNetworkIds.subscriptionCnt,
+                    GroupedSubscriptionIds.subscriptionids,
+                    GroupedSubscriptionIds.networknames,
+                    GroupedSubscriptionIds.expdates,
+                    GroupedSubscriptionIds.renewalemaildates,
                     
                     NetworkDisposition.id AS custrecord_id,
                     NetworkDisposition.custrecordaction,
@@ -48,65 +95,76 @@ define([
                     NetworkDisposition.custrecorddate_add,
                     
                     DispositionList.name AS actionName,
-                    LastEmployee.entityid AS employeename,
+                    LastEmployee.entityid AS employeename
                     
-                CASE
-                    WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
-                    WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
-                    END AS subscription_expdate,
-                
-                CASE
-                    WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate - 74
-                    WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 75
-                    END AS subscription_renewalemaildate
-                
-                FROM
-                    Subscription 
-                INNER JOIN
-                (
-                    SELECT 
-                        Subscription.custrecord_sub_network_id,
-                        COUNT(Subscription.custrecord_sub_network_id) AS subscriptionCnt
-                    FROM
-                        Subscription 
-                    WHERE
+                FROM 
                     (
-                            Subscription.billingsubscriptionstatus != 'TERMINATED'
-                            AND
+                        ${expiredNetworksQuery}
+                    )
+                AS NetworkIds
+                
+                INNER JOIN
+                    (
+                        SELECT 
+                            custrecord_sub_network_id, 
+                            LISTAGG(FilteredPreparedSubscription.id, ',') WITHIN GROUP (ORDER BY id) AS subscriptionids,
+                            LISTAGG(FilteredPreparedSubscription.custrecord_sub_network_name, ',') WITHIN GROUP (ORDER BY FilteredPreparedSubscription.id) AS networknames,
+                            LISTAGG(FilteredPreparedSubscription.expdate, ',') WITHIN GROUP (ORDER BY FilteredPreparedSubscription.id) AS expdates,
+                            LISTAGG(FilteredPreparedSubscription.renewalemaildate, ',') WITHIN GROUP (ORDER BY FilteredPreparedSubscription.id) AS renewalemaildates
+                        FROM 
                             (
-                                (
-                                Subscription.startdate < CURRENT_DATE 
-                                AND
-                                Subscription.enddate >= CURRENT_DATE 
-                                AND
-                                Subscription.billingsubscriptionstatus != 'TERMINATED'
-                                AND
-                                Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
-                                ) 
-                            OR
-                                (
-                                Subscription.startdate >= CURRENT_DATE 
-                                AND
-                                Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                                AND
-                                Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
-                                )
-                            )
-                           
-                    )         
-                    GROUP BY 
-                        Subscription.custrecord_sub_network_id  
-                    HAVING 
-                        COUNT(Subscription.custrecord_sub_network_id) > 1
-                ) 
-                AS 
-                    GroupedNetworkIds
+                                SELECT 
+                                    id,
+                                    custrecord_sub_network_id,
+                                    custrecord_sub_network_name,
+                                CASE
+                                    WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate
+                                    WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 1
+                                END AS expdate,
+                
+                                CASE
+                                    WHEN Subscription.startdate < CURRENT_DATE THEN Subscription.enddate - 74
+                                    WHEN Subscription.startdate >= CURRENT_DATE THEN Subscription.startdate - 75
+                                END AS renewalemaildate
+                    
+                                FROM
+                                    Subscription 
+                                WHERE
+                                    custrecord_sub_network_id IS NOT NULL
+                                AND                    
+                                    (
+                                            Subscription.billingsubscriptionstatus != 'TERMINATED'
+                                        AND
+                                            (
+                                                (
+                                                        Subscription.startdate < CURRENT_DATE 
+                                                    AND
+                                                        Subscription.enddate >= CURRENT_DATE 
+                                                    AND
+                                                        Subscription.billingsubscriptionstatus != 'TERMINATED'
+                                                    AND
+                                                        Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
+                                                ) 
+                                            OR
+                                                (
+                                                        Subscription.startdate >= CURRENT_DATE 
+                                                    AND
+                                                        Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                                                    AND
+                                                        Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
+                                                )
+                                            )     
+                                    ) 
+                            ) AS FilteredPreparedSubscription
+                        GROUP BY 
+                            FilteredPreparedSubscription.custrecord_sub_network_id  
+                    ) AS GroupedSubscriptionIds
                 ON
-                    (Subscription.custrecord_sub_network_id = GroupedNetworkIds.custrecord_sub_network_id)
+                    (NetworkIds.custrecord_sub_network_id = GroupedSubscriptionIds.custrecord_sub_network_id)
                 LEFT OUTER JOIN
                     customrecordbs_cr_expired_network_dispos AS NetworkDisposition
                 ON
-                    (Subscription.custrecord_sub_network_id = NetworkDisposition.custrecordnetwork_id)
+                    (NetworkIds.custrecord_sub_network_id = NetworkDisposition.custrecordnetwork_id)
                 LEFT OUTER JOIN
                     customlistbs_cl_disposition_action AS DispositionList
                 ON
@@ -114,45 +172,23 @@ define([
                 LEFT OUTER JOIN
                     employee AS LastEmployee
                 ON
-                    (NetworkDisposition.custrecordemployee_id = LastEmployee.id)    
-                WHERE
-                    (
-                            Subscription.billingsubscriptionstatus != 'TERMINATED'
-                            AND
-                            (
-                                (
-                                Subscription.startdate < CURRENT_DATE 
-                                AND
-                                Subscription.enddate >= CURRENT_DATE 
-                                AND
-                                Subscription.billingsubscriptionstatus != 'TERMINATED'
-                                AND
-                                Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
-                                ) 
-                            OR
-                                (
-                                Subscription.startdate >= CURRENT_DATE 
-                                AND
-                                Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                                AND
-                                Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
-                                )
-                            )     
-                    )                       
-           `;
+                    (NetworkDisposition.custrecordemployee_id = LastEmployee.id) 
+                WHERE     
+                    NetworkIds.rownumber BETWEEN ${(pageNum * pageSize) + 1} AND ${(pageNum + 1) * pageSize}
+            `;
 
             return query.runSuiteQL({ query: suiteQLQuery }).asMappedResults();
         }
 
-        function loadExpiredNetworksWithDispositionData() {
-            const resultSet = loadExpiredNetworksWithDispositionDataRaw();
-            return groupSQLJoinedDataSortedArray(resultSet, EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING).map(
+        function loadExpiredNetworksWithDispositionData(pageNum, pageSize) {
+            const resultSet = loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize);
+            return resultSet.map(
                 dataRow => ({
-                    'Network name': dataRow['custrecord_sub_network_name'],
-                    'Subscription records': dataRow.groupedData['subscription'],
-                    'Subscription Record Expire Date': dataRow.groupedData['subscription'],
-                    'Renewal Email Date': dataRow.groupedData['subscription'],
-                    'Earliest expiration': dataRow.groupedData['subscription'],
+                    'Network name': dataRow['networknames'],
+                    'Subscription records': dataRow['subscriptionids'],
+                    'Subscription Record Expire Date': dataRow['expdates'],
+                    'Renewal Email Date': dataRow['renewalemaildates'],
+                    'Earliest expiration': dataRow['expdates'],
                     'Last update': dataRow['custrecorddate_modified'],
                     'Action': dataRow['actionname'],
                     'CS Team Notes': dataRow['custrecordnote'],
@@ -164,9 +200,14 @@ define([
             );
         }
 
-        function loadExpiredNetworksWithDispositionDataByNetwork() {
-            const resultSet = loadExpiredNetworksWithDispositionDataRaw();
-            return groupSQLJoinedDataNotSorted(resultSet, EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING);
+        function loadExpiredNetworksWithDispositionDataByNetwork(pageNum, pageSize) {
+            const resultSet = loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize);
+
+            if (isNullOrEmpty(resultSet)) {
+                return null;
+            } else {
+                return groupSQLJoinedDataNotSorted(resultSet, EXPIRED_NETWORKS_WITH_DISPOSITION_GROUPING);
+            }
         }
 
         function upsertDisposition(networkId, actionId, employeeId, note) {
@@ -239,9 +280,12 @@ define([
         }
 
         return {
+            countExpiredNetworks,
+
             loadExpiredNetworksWithDispositionDataRaw,
             loadExpiredNetworksWithDispositionData,
             loadExpiredNetworksWithDispositionDataByNetwork,
 
-            upsertDisposition }
+            upsertDisposition
+        }
     });
