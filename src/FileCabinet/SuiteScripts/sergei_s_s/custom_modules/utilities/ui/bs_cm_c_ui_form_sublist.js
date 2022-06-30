@@ -40,6 +40,16 @@ define([
             $column?.click();
         }
 
+        function sortAscendSublistColumn(columnId) {
+            if (isNullOrEmpty(columnId)) {
+                throw new Error('Column id is undefined or null, cannot switch sorting')
+            }
+
+            const $column = document.querySelector(`tr td.listheadertd:nth-child(${columnId})`);
+
+            $column?.click();
+        }
+
         function prepareStickyPagination(options = {}) {
             let {
                 paginationContainerSelector = 'div.paginationContainer',
@@ -74,6 +84,7 @@ define([
         return {
             formatSublistDateField,
             sortDescendSublistColumn,
+            sortAscendSublistColumn,
             prepareStickyPagination,
         }
     });

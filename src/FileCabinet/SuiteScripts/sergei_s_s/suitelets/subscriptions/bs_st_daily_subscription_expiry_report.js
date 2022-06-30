@@ -43,7 +43,7 @@ define([
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
                     serverWidget.FieldType.TEXT,
-                    serverWidget.FieldType.TEXT,
+                    serverWidget.FieldType.DATE,
                     serverWidget.FieldType.DATE,
                     serverWidget.FieldType.DATE,
                     serverWidget.FieldType.INTEGER,
@@ -67,7 +67,40 @@ define([
                     null,
                     null,
                     null,
-                    null,
+
+                    (value) => {
+                        if (isNullOrEmpty(value)) {
+                            return null;
+                        }
+
+                        let renewalDate = value.split(',')[0];
+                        renewalDate = isNullOrEmpty(renewalDate) ? null : formatDateForReport(renewalDate);
+
+                        return [
+                            {
+                                style: `
+                                    --renewaldate: '${renewalDate}';
+                                    position: relative;
+                                `
+                            },
+                            {
+                                className: ':after',
+                                style: `
+                                    content: var(--renewaldate);
+                                
+                                    width: 100%;
+                                    height: 100%;
+
+                                    display: block;
+                                    position: absolute;
+                                  
+                                    top: 0px;
+                                    background-color: inherit;
+                                `
+                            }
+                        ]
+                    },
+
                     (value) => {
                         if (isNullOrEmpty(value)) {
                             return null;
@@ -280,12 +313,8 @@ define([
                             return null;
                         }
 
-                        let strRows = ''
-                        for (const renewalDate of value.split(',')) {
-                            strRows += `${formatDateForReport(renewalDate)}<br/>`
-                        }
-
-                        return strRows;
+                        const renewalDate = value.split(',')[0];
+                        return isNullOrEmpty(renewalDate) ? null : renewalDate;
                     },
 
                     'Earliest expiration': (value) => {

@@ -25,7 +25,7 @@ function(
     { loadExpiredNetworksWithDispositionDataByNetwork },
     { showLoadingDialog },
     { prepareNoteHeader, formatDateForReport },
-    { formatSublistDateField, sortDescendSublistColumn, prepareStickyPagination },
+    { formatSublistDateField, sortAscendSublistColumn, prepareStickyPagination },
     { isNullOrEmpty, toInt },
 ) {
     // state variables
@@ -208,6 +208,7 @@ function(
                 $child.innerHTML = links;
             });
 
+            formatSublistDateField(5, 'renewaldate');
             formatSublistDateField(6, 'expdate');
             formatSublistDateField(7, 'lastupdatedate');
 
@@ -224,7 +225,7 @@ function(
             bindActions();
 
             // initiate events
-            sortDescendSublistColumn(5);
+            sortAscendSublistColumn(5);
             prepareStickyPagination();
 
             // hide dialog box
