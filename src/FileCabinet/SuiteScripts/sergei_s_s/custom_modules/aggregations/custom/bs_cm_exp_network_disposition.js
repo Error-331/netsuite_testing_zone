@@ -32,52 +32,76 @@ define([
             groupPrefixes: []
         };
 
-        const expiredNetworksQuery = `
-            SELECT
-                Subscription.custrecord_sub_network_id,
-                ROW_NUMBER() OVER (ORDER BY Subscription.custrecord_sub_network_id) AS rownumber
-            FROM 
-                Subscription                   
-            WHERE
-                Subscription.custrecord_sub_network_id IS NOT NULL
-            AND
-                Subscription.custrecord_sub_network_name IS NOT NULL
-            AND                    
-                (
-                        Subscription.billingsubscriptionstatus != 'TERMINATED'
-                    AND
-                        (
+        function composeExpiredNetworksQuery(disposition) {
+            let expiredNetworksQuery = `
+                SELECT
+                    Subscription.custrecord_sub_network_id,
+                    ROW_NUMBER() OVER (ORDER BY Subscription.custrecord_sub_network_id) AS rownumber
+                FROM 
+                    Subscription 
+                LEFT OUTER JOIN
+                    customrecordbs_cr_expired_network_dispos AS NetworkDisposition
+                ON
+                    (Subscription.custrecord_sub_network_id = NetworkDisposition.custrecordnetwork_id)                   
+                WHERE
+                    Subscription.custrecord_sub_network_id IS NOT NULL
+                AND
+                    Subscription.custrecord_sub_network_name IS NOT NULL
+                AND                    
+                    (
+                            Subscription.billingsubscriptionstatus != 'TERMINATED'
+                        AND
                             (
-                                    Subscription.startdate < CURRENT_DATE 
-                                AND
-                                    Subscription.enddate >= CURRENT_DATE 
-                                AND
-                                    Subscription.billingsubscriptionstatus != 'TERMINATED'
-                                AND
-                                    Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
-                            ) 
-                    OR
-                            (
-                                    Subscription.startdate >= CURRENT_DATE 
-                                AND
-                                    Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
-                                AND
-                                    Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
-                            )
-                        )     
-                )    
-            GROUP BY
-                Subscription.custrecord_sub_network_id
-            ORDER BY
-                Subscription.custrecord_sub_network_id 
-        `;
+                                (
+                                        Subscription.startdate < CURRENT_DATE 
+                                    AND
+                                        Subscription.enddate >= CURRENT_DATE 
+                                    AND
+                                        Subscription.billingsubscriptionstatus != 'TERMINATED'
+                                    AND
+                                        Subscription.enddate < ADD_MONTHS(CURRENT_DATE, 12)
+                                ) 
+                        OR
+                                (
+                                        Subscription.startdate >= CURRENT_DATE 
+                                    AND
+                                        Subscription.billingsubscriptionstatus = 'PENDING_ACTIVATION' 
+                                    AND
+                                        Subscription.startdate < ADD_MONTHS(CURRENT_DATE, 12)
+                                )
+                            )     
+                    )    
+            `;
 
-        function countExpiredNetworks() {
-            return query.runSuiteQL({ query: `SELECT COUNT(*) AS total FROM (${expiredNetworksQuery})` }).asMappedResults()[0].total;
+            if (!isNullOrEmpty(disposition) && disposition !== 0) {
+                expiredNetworksQuery += `
+                    AND NetworkDisposition.custrecordaction = ${disposition}
+                `;
+            }
+
+            expiredNetworksQuery += `
+                GROUP BY
+                    Subscription.custrecord_sub_network_id
+                ORDER BY
+                    Subscription.custrecord_sub_network_id
+            `;
+
+            return expiredNetworksQuery;
         }
 
-        function loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize) {
-            const suiteQLQuery = `
+        function countExpiredNetworks(disposition) {
+            let suiteQLQuery = `
+                SELECT 
+                    COUNT(*) AS total
+                FROM 
+                    (${composeExpiredNetworksQuery(disposition)}) AS NetworkIds
+            `;
+
+            return query.runSuiteQL({ query: suiteQLQuery }).asMappedResults()[0].total;
+        }
+
+        function loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize, disposition) {
+            let suiteQLQuery = `
                 SELECT
                     NetworkIds.custrecord_sub_network_id,
                     NetworkIds.rownumber,
@@ -90,16 +114,16 @@ define([
                     NetworkDisposition.id AS custrecord_id,
                     NetworkDisposition.custrecordaction,
                     NetworkDisposition.custrecordemployee_id,
+                    NetworkDisposition.custrecordemployee_name AS employeename,
                     NetworkDisposition.custrecordnote,
                     NetworkDisposition.custrecorddate_modified,
                     NetworkDisposition.custrecorddate_add,
                     
-                    DispositionList.name AS actionName,
-                    LastEmployee.entityid AS employeename
+                    DispositionList.name AS actionName
                     
                 FROM 
                     (
-                        ${expiredNetworksQuery}
+                        ${composeExpiredNetworksQuery(disposition)}
                     )
                 AS NetworkIds
                 
@@ -169,10 +193,6 @@ define([
                     customlistbs_cl_disposition_action AS DispositionList
                 ON
                     (NetworkDisposition.custrecordaction = DispositionList.id)
-                LEFT OUTER JOIN
-                    employee AS LastEmployee
-                ON
-                    (NetworkDisposition.custrecordemployee_id = LastEmployee.id) 
                 WHERE     
                     NetworkIds.rownumber BETWEEN ${(pageNum * pageSize) + 1} AND ${(pageNum + 1) * pageSize}
             `;
@@ -180,8 +200,8 @@ define([
             return query.runSuiteQL({ query: suiteQLQuery }).asMappedResults();
         }
 
-        function loadExpiredNetworksWithDispositionData(pageNum, pageSize) {
-            const resultSet = loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize);
+        function loadExpiredNetworksWithDispositionData(pageNum, pageSize, disposition) {
+            const resultSet = loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize, disposition);
             return resultSet.map(
                 dataRow => ({
                     'Network name': dataRow['networknames'],
@@ -200,8 +220,8 @@ define([
             );
         }
 
-        function loadExpiredNetworksWithDispositionDataByNetwork(pageNum, pageSize) {
-            const resultSet = loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize);
+        function loadExpiredNetworksWithDispositionDataByNetwork(pageNum, pageSize, disposition) {
+            const resultSet = loadExpiredNetworksWithDispositionDataRaw(pageNum, pageSize, disposition);
 
             if (isNullOrEmpty(resultSet)) {
                 return null;
@@ -210,7 +230,7 @@ define([
             }
         }
 
-        function upsertDisposition(networkId, actionId, employeeId, note) {
+        function upsertDisposition(networkId, actionId, employeeId, employeeName, note) {
             let suiteQLQuery = `
                 SELECT 
                     id 
@@ -241,6 +261,7 @@ define([
             objRecord.setValue({ fieldId: 'custrecordnetwork_id', value: networkId });
             objRecord.setValue({ fieldId: 'custrecordaction', value: actionId });
             objRecord.setValue({ fieldId: 'custrecordemployee_id', value: employeeId });
+            objRecord.setValue({ fieldId: 'custrecordemployee_name', value: employeeName });
             objRecord.setValue({ fieldId: 'custrecordnote', value: note });
 
             const currentDate = new Date();

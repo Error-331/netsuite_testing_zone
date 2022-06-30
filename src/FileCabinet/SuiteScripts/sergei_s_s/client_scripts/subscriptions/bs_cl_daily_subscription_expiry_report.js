@@ -10,6 +10,7 @@ define([
     './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
     './../../custom_modules/utilities/ui/bs_cm_c_ui_dialogbox',
     './../../custom_modules/utilities/specific/bs_cm_daily_subscription_expiry_report_utils',
+    './../../custom_modules/utilities/ui/bs_cm_c_ui_form_sublist',
     './../../custom_modules/utilities/bs_cm_general_utils',
 ],
 /**
@@ -24,6 +25,7 @@ function(
     { loadExpiredNetworksWithDispositionDataByNetwork },
     { showLoadingDialog },
     { prepareNoteHeader, formatDateForReport },
+    { formatSublistDateField, sortDescendSublistColumn, prepareStickyPagination },
     { isNullOrEmpty, toInt },
 ) {
     // state variables
@@ -72,6 +74,8 @@ function(
         }
     }
 
+
+
     function onDispositionFormSubmitClick() {
         document.getElementById('custpage_dispositionform').submit();
     }
@@ -79,10 +83,12 @@ function(
     // business logic
     function loadData() {
         const queryParams = new URLSearchParams(window.location.search);
-        const page = queryParams.has('page') ? queryParams.get('page') : 0;
-        const pageSize = queryParams.has('pagesize') ? queryParams.get('pagesize') : 100;
 
-        expiredNetworks = loadExpiredNetworksWithDispositionDataByNetwork(page, pageSize);
+        const page = queryParams.has('page') ? toInt(queryParams.get('page')) : 0;
+        const pageSize = queryParams.has('pagesize') ? toInt(queryParams.get('pagesize')) : 100;
+        const disposition = queryParams.has('disposition') ? toInt(queryParams.get('disposition')) : null;
+
+        expiredNetworks = loadExpiredNetworksWithDispositionDataByNetwork(page, pageSize, disposition);
         dispositionActions = loadDispositionActionForSelect();
 
         if (isNullOrEmpty(expiredNetworks)) {
@@ -184,6 +190,7 @@ function(
                 return;
             }
 
+
             $actionButtons = document.querySelectorAll('tr td.uir-list-row-cell:nth-child(8)');
             $notesSections = document.querySelectorAll('section[data-sectiontype="cs_team_notes"]');
 
@@ -193,6 +200,7 @@ function(
 
             document.querySelectorAll('tr td.uir-list-row-cell:nth-child(3) section[data-sectiontype="subcription_records"]').forEach($child => {
                 let links = ''
+
                 for (const subscription_subscriptionid of expiredNetworks[$child.dataset.networkid].subscriptionids.split(',')) {
                     links += `<a target="_blank" href="/app/accounting/subscription/subscription.nl?id=${subscription_subscriptionid}">${subscription_subscriptionid}</a><br/>`
                 }
@@ -200,17 +208,8 @@ function(
                 $child.innerHTML = links;
             });
 
-            document.querySelectorAll('tr td.uir-list-row-cell:nth-child(6)').forEach($child => {
-                $child.style.setProperty('--expdate',`"${formatDateForReport($child.innerHTML)}"`);
-            });
-
-            document.querySelectorAll('tr td.uir-list-row-cell:nth-child(7)').forEach($child => {
-                if (!isNullOrEmpty($child.innerHTML) && $child.innerHTML !== '&nbsp;') {
-                    $child.style.setProperty('--lastupdatedate',`"${formatDateForReport($child.innerHTML)}"`);
-                } else {
-                    $child.style.setProperty('--lastupdatedate',' ');
-                }
-            });
+            formatSublistDateField(6, 'expdate');
+            formatSublistDateField(7, 'lastupdatedate');
 
             $actionButtons.forEach($child => {
                 const compStyles = getComputedStyle($child)
@@ -223,6 +222,12 @@ function(
             });
 
             bindActions();
+
+            // initiate events
+            sortDescendSublistColumn(5);
+            prepareStickyPagination();
+
+            // hide dialog box
             hideLoadingDialog();
         });
     }
@@ -298,7 +303,7 @@ function(
      * @since 2015.2
      */
     function validateField(scriptContext) {
-
+        return true;
     }
 
     /**
@@ -356,7 +361,15 @@ function(
      * @since 2015.2
      */
     function saveRecord(scriptContext) {
+        return true;
+    }
 
+    function filterByDisposition() {
+        const currentURL = new URL(window.location);
+        const $dispositionSelect = document.getElementsByName('custpage_dispositionselect')[0];
+
+        currentURL.searchParams.set('disposition', $dispositionSelect.value);
+        window.location = currentURL.href;
     }
 
     return {
@@ -370,6 +383,7 @@ function(
         validateInsert: validateInsert,
         validateDelete: validateDelete,
         saveRecord: saveRecord,
+        filterByDisposition,
     };
     
 });

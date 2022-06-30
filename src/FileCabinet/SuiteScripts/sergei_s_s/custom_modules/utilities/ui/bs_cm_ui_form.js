@@ -81,6 +81,8 @@ define([
                 page = 0,
                 pageSize,
                 totalElements,
+                container,
+                forceShow = false,
             } = options;
 
             if (isNullOrEmpty(pageSize)) {
@@ -102,10 +104,19 @@ define([
                 }
             }
 
+            let pagesContent = `
+                <div class="paginationContainer">
+                   <span>Page:</span>${linksContent}
+                </div>
+            `;
+
+
             let fieldContents = `
                 <style>
                     div.paginationContainer {
                         display: flex;
+                        position: relative;
+                        
                         flex-flow: row nowrap;
                         justify-content: flex-start;
                         align-items: flex-start;
@@ -116,6 +127,16 @@ define([
                         background-color: #c3d1de;
                     }
                     
+                    div.paginationContainerSticky {
+                          position: fixed;
+                          
+                          left: 0px;
+                          width: 100%;
+                          z-index: 100;
+                          
+                          box-shadow: 0 8px 8px rgb(0 0 0 / 25%);
+                    }
+                    
                     div.paginationContainer a {
                         flex-grow: 0;
                         flex-shrink: 0;
@@ -123,7 +144,6 @@ define([
                         
                         margin-right: 5px;
                         font-size: 14px;
-                        font-weight: bold;
                         
                         color: #24385B;
                     }
@@ -141,19 +161,22 @@ define([
                     }
                 </style>
 
-                <div class="paginationContainer">
-                   <span>Page:</span>${linksContent}
-                </div>
+                ${ (pageCount <= 1 && !forceShow) ? ' ' : pagesContent }
             `;
 
             const $field = $form.addField(
                 {
                     id: `custpage_pagination_${generateRandomString(5, LOWERCASE_LETTERS_EN)}`,
-                    label: 'PP',
+                    label: 'Pagination container',
                     type: serverWidget.FieldType.INLINEHTML,
+                    container,
                 });
 
             $field.defaultValue = fieldContents;
+
+            $field.updateLayoutType({
+                layoutType: serverWidget.FieldLayoutType.OUTSIDEABOVE
+            });
         }
 
         return {

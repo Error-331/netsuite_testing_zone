@@ -40,15 +40,23 @@ define([
             $column?.click();
         }
 
-        function prepareStickyPagination() {
+        function prepareStickyPagination(options = {}) {
+            let {
+                paginationContainerSelector = 'div.paginationContainer',
+            } = options;
+
             const $netSuiteHeader = document.getElementById('div__header');
-            const $paginationContainer = document.querySelector('div.paginationContainer');
+            const $paginationContainer = document.querySelector(paginationContainerSelector);
+
+            if (isNullOrEmpty($netSuiteHeader) || isNullOrEmpty($paginationContainer)) {
+                return;
+            }
 
             const netSuiteHeaderClientRect = $netSuiteHeader.getBoundingClientRect();
-            const paginationContainerClientRect = $paginationContainer.getBoundingClientRect();
+            const paginationContainerOffsetTop  = $paginationContainer.offsetTop;
 
             function onWindowScroll() {
-                if (window.scrollY >= paginationContainerClientRect.top - netSuiteHeaderClientRect.height) {
+                if (window.scrollY >= (paginationContainerOffsetTop - netSuiteHeaderClientRect.height)) {
                     $netSuiteHeader.classList.remove('ns-shadow')
                     $paginationContainer.classList.add('paginationContainerSticky');
 
@@ -60,6 +68,7 @@ define([
             }
 
             window.addEventListener('scroll', onWindowScroll);
+            onWindowScroll();
         }
 
         return {

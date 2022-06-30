@@ -10,6 +10,7 @@ define([
         './../../custom_modules/utilities/bs_cm_runtime_utils',
         './../../custom_modules/utilities/specific/bs_cm_daily_subscription_expiry_report_utils',
         './../../custom_modules/aggregations/custom/bs_cm_exp_network_disposition',
+        './../../custom_modules/aggregations/custom/bs_cm_disposition_action_list',
     ],
     /**
  * @param{serverWidget} serverWidget
@@ -18,10 +19,11 @@ define([
         serverWidget,
         { isNullOrEmpty, isString, toInt },
         { addFormSublist },
-        { createPagination },
-        { getCurrentEmployeeId, getScriptURLPathQuery },
+        { addFormSelectBox,createPagination },
+        { getCurrentUserInfo, getScriptURLPathQuery },
         { formatDateForReport, prepareNoteHeader },
         { upsertDisposition, loadExpiredNetworksWithDispositionData, countExpiredNetworks },
+        { loadDispositionActionForSelect },
         ) => {
         const FIELDS_TO_IGNORE = ['networkid', 'employeename', 'dispositionid', 'actionid'];
         const SUBLIST_ID = 'networkslist';
@@ -67,6 +69,10 @@ define([
                     null,
                     null,
                     (value) => {
+                        if (isNullOrEmpty(value)) {
+                            return null;
+                        }
+
                         let expDate = value.split(',')[0];
                         expDate = isNullOrEmpty(expDate) ? null : formatDateForReport(expDate);
 
@@ -247,12 +253,20 @@ define([
                 ignoreFieldNames: FIELDS_TO_IGNORE,
                 customFieldHandlers: {
                     'Network name': (value) => {
+                        if (isNullOrEmpty(value)) {
+                            return null;
+                        }
+
                         const networkName = value.split(',')[0];
                         return `<a target="_blank" href="${urlToNetworkManagement}&bsn_email=${networkName}">${networkName}</a>`
                     },
                     'Subscription records': (value, dataRow) => `<section data-sectiontype='subcription_records' data-networkid=${dataRow['networkid']}>Loading...</section>`,
 
                     'Subscription Record Expire Date': (value) => {
+                        if (isNullOrEmpty(value)) {
+                            return null;
+                        }
+
                         let strRows = ''
                         for (const expDate of value.split(',')) {
                             strRows += `${formatDateForReport(expDate)}<br/>`
@@ -262,6 +276,10 @@ define([
                     },
 
                     'Renewal Email Date': (value) => {
+                        if (isNullOrEmpty(value)) {
+                            return null;
+                        }
+
                         let strRows = ''
                         for (const renewalDate of value.split(',')) {
                             strRows += `${formatDateForReport(renewalDate)}<br/>`
@@ -271,6 +289,10 @@ define([
                     },
 
                     'Earliest expiration': (value) => {
+                        if (isNullOrEmpty(value)) {
+                            return null;
+                        }
+
                         const expDate = value.split(',')[0];
                         return isNullOrEmpty(expDate) ? null : expDate;
                     },
@@ -297,21 +319,16 @@ define([
             return currentForm;
         }
 
-        function writePage(response, page = 0, pageSize = 100) {
+        function writePage(response, page = 0, pageSize = 100, disposition = 0) {
             const currentForm = createForm();
             currentForm.clientScriptModulePath = './../../client_scripts/subscriptions/bs_cl_daily_subscription_expiry_report';
 
             page = isString(page) ? toInt(page) : page;
             pageSize = isString(pageSize) ? toInt(pageSize) : pageSize;
+            disposition = isString(disposition) ? toInt(disposition) : disposition;
 
-            const networksList = loadExpiredNetworksWithDispositionData(page, pageSize);
-
-            if (isNullOrEmpty(networksList)) {
-                response.writePage(currentForm);
-                return;
-            }
-
-            const totalElements = countExpiredNetworks();
+            const networksList = loadExpiredNetworksWithDispositionData(page, pageSize, disposition);
+            const totalElements = countExpiredNetworks(disposition);
 
            // response.write(JSON.stringify(networksList.length));
            // return
@@ -319,8 +336,33 @@ define([
             createPagination({
                 page,
                 pageSize,
-                totalElements,
+                totalElements
             }, currentForm);
+
+            addFormSelectBox({
+                    id: 'dispositionselect',
+                    label: 'Filter by disposition',
+                    disabled: false,
+                    defaultValue: disposition,
+                },
+                [
+                    { id: 0, name: 'All' }
+                ]
+                    .concat(loadDispositionActionForSelect())
+                    .map(dataRow => ({ value: dataRow.id, text: dataRow.name })),
+                currentForm
+            );
+
+            currentForm.addButton({
+                id: 'custpage_filterbutton',
+                label : 'Filter',
+                functionName: 'filterByDisposition'
+            });
+
+            if (isNullOrEmpty(networksList)) {
+                response.writePage(currentForm);
+                return;
+            }
 
             createNetworksSublist(currentForm, networksList, totalElements);
             response.writePage(currentForm);
@@ -336,10 +378,11 @@ define([
 
                 page,
                 pagesize,
+                disposition,
             } = request.parameters;
 
             if (request.method === 'GET') {
-                writePage(response, page, pagesize);
+                writePage(response, page, pagesize, disposition);
             } else if (request.method === 'POST') {
                 response.write(JSON.stringify({
                     custpage_networkid,
@@ -347,9 +390,9 @@ define([
                     custpage_note,
                 }));
 
-                const employeeId = getCurrentEmployeeId();
+                const { id, name } = getCurrentUserInfo();
 
-                upsertDisposition(toInt(custpage_networkid), toInt(custpage_action), employeeId, custpage_note)
+                upsertDisposition(toInt(custpage_networkid), toInt(custpage_action), id, name, custpage_note)
                 writePage(response, page, pagesize);
             } else {
                 response.write('Wrong request method. Please open current suitelet using link.');

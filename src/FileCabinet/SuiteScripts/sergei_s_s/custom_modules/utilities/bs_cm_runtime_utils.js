@@ -24,6 +24,16 @@ define([
             return id;
         }
 
+        function getCurrentUserName() {
+            const { name } = runtime.getCurrentUser();
+            return name;
+        }
+
+        function getCurrentUserInfo() {
+            const { id, name } = runtime.getCurrentUser();
+            return { id, name };
+        }
+
         function getCurrentEmployeeName() {
             const { name } = runtime.getCurrentUser();
             return name;
@@ -61,6 +71,8 @@ define([
         return {
             getScriptParameterByName,
             getCurrentEmployeeId,
+            getCurrentUserName,
+            getCurrentUserInfo,
             getCurrentEmployeeName,
             getScriptURLPathQuery,
             getScriptCurrentURLPathQuery,
