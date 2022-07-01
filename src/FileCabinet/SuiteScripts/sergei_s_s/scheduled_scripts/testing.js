@@ -8,6 +8,7 @@ require([
         'N/search',
         'N/format',
         'N/runtime',
+        'N/url',
         'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_general_utils',
         'SuiteScripts/sergei_s_s/custom_modules/utilities/bs_cm_runtime_utils',
         'SuiteScripts/sergei_s_s/custom_modules/aggregations/subscription/bs_cm_expired_subscription_for_salesrep',
@@ -20,7 +21,7 @@ require([
  * @param{search} search
  */
     (
-        query, record, search, format, runtime,
+        query, record, search, format, runtime, url,
         { isNullOrEmpty, isArray },
         { getCurrentEmployeeId,  getCurrentUserName },
         { loadExpSubsForSalesReps, loadExpSubsWithGroupedCustomers },
@@ -59,7 +60,16 @@ require([
                 SELECT * FROM customrecordbs_cr_expired_network_dispos
             `;
 
-log.debug( getCurrentUserName())
+            var output = url.format({
+                domain: 'http://fruitland.com?gub=1&pp=3',
+                params: {
+                    fruit: 'grape',
+                    pp:5,
+                    gub:'zo'
+                }
+            });
+log.debug(output);
+//log.debug( getCurrentUserName())
             //log.debug(loadExpiredNetworksWithDispositionDataRaw(0, 100, 4));
             return;
 

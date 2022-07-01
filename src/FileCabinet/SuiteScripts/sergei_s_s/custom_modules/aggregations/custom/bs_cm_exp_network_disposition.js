@@ -73,7 +73,16 @@ define([
                     )    
             `;
 
-            if (!isNullOrEmpty(disposition) && disposition !== 0) {
+            if (!isNullOrEmpty(disposition) && disposition === 1) {
+                expiredNetworksQuery += `
+                    AND 
+                        (
+                            NetworkDisposition.custrecordaction = ${disposition}
+                            OR 
+                            NetworkDisposition.custrecordaction IS NULL
+                        )
+                `;
+            } else if (!isNullOrEmpty(disposition) && disposition !== 0) {
                 expiredNetworksQuery += `
                     AND NetworkDisposition.custrecordaction = ${disposition}
                 `;
@@ -82,6 +91,8 @@ define([
             expiredNetworksQuery += `
                 GROUP BY
                     Subscription.custrecord_sub_network_id
+                HAVING    
+                    COUNT(Subscription.id) > 1
                 ORDER BY
                     Subscription.custrecord_sub_network_id
             `;
@@ -182,6 +193,8 @@ define([
                             ) AS FilteredPreparedSubscription
                         GROUP BY 
                             FilteredPreparedSubscription.custrecord_sub_network_id  
+                        HAVING    
+                            COUNT(FilteredPreparedSubscription.id) > 1
                     ) AS GroupedSubscriptionIds
                 ON
                     (NetworkIds.custrecord_sub_network_id = GroupedSubscriptionIds.custrecord_sub_network_id)

@@ -201,7 +201,7 @@ function(
             document.querySelectorAll('tr td.uir-list-row-cell:nth-child(3) section[data-sectiontype="subcription_records"]').forEach($child => {
                 let links = ''
 
-                for (const subscription_subscriptionid of expiredNetworks[$child.dataset.networkid].subscriptionids.split(',')) {
+                for (const subscription_subscriptionid of expiredNetworks[$child.dataset.networkid]?.subscriptionids?.split(',')) {
                     links += `<a target="_blank" href="/app/accounting/subscription/subscription.nl?id=${subscription_subscriptionid}">${subscription_subscriptionid}</a><br/>`
                 }
 
@@ -370,6 +370,8 @@ function(
         const $dispositionSelect = document.getElementsByName('custpage_dispositionselect')[0];
 
         currentURL.searchParams.set('disposition', $dispositionSelect.value);
+        currentURL.searchParams.set('page', 0);
+
         window.location = currentURL.href;
     }
 

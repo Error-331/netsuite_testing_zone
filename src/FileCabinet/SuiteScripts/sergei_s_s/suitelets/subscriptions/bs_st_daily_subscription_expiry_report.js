@@ -164,7 +164,7 @@ define([
 
                     (value, dataRow) => {
                         const actionId = isNullOrEmpty(dataRow['actionid']) ? 0 : toInt(dataRow['actionid']);
-                        const label = isNullOrEmpty(value) ? 'No changes' : value;
+                        const label = isNullOrEmpty(value) ? 'Disposition' : value;
 
                         let bgImage = '';
                         let textColor = 'black';
@@ -185,8 +185,7 @@ define([
                                 textColor = 'white';
                                 break;
                             default:
-                                bgImage = 'linear-gradient(to right bottom, #1aff1a, #00e600 3%, #00b300)';
-                                textColor = 'white';
+                                bgImage = 'linear-gradient(to right bottom, #ffffff, #e6e6e6 3%, #b3b3b3)';
                                 break;
                         }
 
@@ -365,7 +364,7 @@ define([
             createPagination({
                 page,
                 pageSize,
-                totalElements
+                totalElements,
             }, currentForm);
 
             addFormSelectBox({
@@ -422,7 +421,7 @@ define([
                 const { id, name } = getCurrentUserInfo();
 
                 upsertDisposition(toInt(custpage_networkid), toInt(custpage_action), id, name, custpage_note)
-                writePage(response, page, pagesize);
+                writePage(response, page, pagesize, disposition);
             } else {
                 response.write('Wrong request method. Please open current suitelet using link.');
             }
